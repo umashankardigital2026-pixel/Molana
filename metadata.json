@@ -1,0 +1,6 @@
+{
+  "name": "Maulana Shamsuddin - Dua, Wazifa & Ruhani Ilm",
+  "description": "Premium Islamic spiritual services portal for Dua, Wazifa, Ruhani Ilm, Taweez, and relationship guidance by Maulana Shamsuddin.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
