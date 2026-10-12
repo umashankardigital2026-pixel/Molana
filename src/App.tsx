@@ -124,7 +124,7 @@ export default function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [adminInitialTab, setAdminInitialTab] = useState<
-    'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source' | 'extension'
+    'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'security' | 'php-source' | 'extension'
   >('dashboard');
   const [prefilledServiceConsultation, setPrefilledServiceConsultation] = useState('');
 
@@ -139,7 +139,7 @@ export default function App() {
     localStorage.removeItem('ms_admin_auth');
     sessionStorage.removeItem('ms_admin_auth');
     setIsAdminOpen(false);
-    if (window.location.hash === '#admin' || window.location.hash === '#images') {
+    if (window.location.hash === '#admin' || window.location.hash === '#images' || window.location.hash === '#security' || window.location.hash === '#password') {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
   };
@@ -184,6 +184,14 @@ export default function App() {
         const isAuth = localStorage.getItem('ms_admin_auth') === 'true' || sessionStorage.getItem('ms_admin_auth') === 'true';
         if (isAuth) {
           setAdminInitialTab('images');
+          setIsAdminOpen(true);
+        } else {
+          setIsLoginModalOpen(true);
+        }
+      } else if (window.location.hash === '#security' || window.location.hash === '#password') {
+        const isAuth = localStorage.getItem('ms_admin_auth') === 'true' || sessionStorage.getItem('ms_admin_auth') === 'true';
+        if (isAuth) {
+          setAdminInitialTab('security');
           setIsAdminOpen(true);
         } else {
           setIsLoginModalOpen(true);
@@ -260,8 +268,8 @@ export default function App() {
         onNavigate={scrollToSection}
         isAdminAuthenticated={isAdminAuthenticated}
         onOpenLogin={() => setIsLoginModalOpen(true)}
-        onOpenAdmin={() => {
-          setAdminInitialTab('dashboard');
+        onOpenAdmin={(tab) => {
+          setAdminInitialTab(tab || 'dashboard');
           setIsAdminOpen(true);
         }}
         onLogout={handleAdminLogout}
@@ -430,7 +438,7 @@ Peace and goodwill to all seekers. Spiritual supplications, guidance, and prayer
           onLogout={handleAdminLogout}
           onClose={() => {
             setIsAdminOpen(false);
-            if (window.location.hash === '#admin' || window.location.hash === '#images') {
+            if (window.location.hash === '#admin' || window.location.hash === '#images' || window.location.hash === '#security' || window.location.hash === '#password') {
               window.history.replaceState(null, '', window.location.pathname + window.location.search);
             }
           }}

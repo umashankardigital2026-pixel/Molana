@@ -36,6 +36,9 @@ import {
   EyeOff,
   RotateCcw,
   Shield,
+  ShieldAlert,
+  AlertTriangle,
+  CheckCircle2,
 } from 'lucide-react';
 import { AdminExtensionTab } from './AdminExtensionTab';
 import {
@@ -68,7 +71,7 @@ interface AdminPanelProps {
   setContent: React.Dispatch<React.SetStateAction<WebsiteContent>>;
   settings: GeneralSettings;
   setSettings: React.Dispatch<React.SetStateAction<GeneralSettings>>;
-  initialTab?: 'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source' | 'extension';
+  initialTab?: 'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'security' | 'php-source' | 'extension';
   onClose: () => void;
   onLogout?: () => void;
 }
@@ -92,7 +95,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source' | 'extension'
+    'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'security' | 'php-source' | 'extension'
   >(initialTab);
 
   const [notification, setNotification] = useState<string | null>(null);
@@ -102,7 +105,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setTimeout(() => setNotification(null), 3000);
   };
 
-  // Admin Password Management States
+  // Admin Password & Security Management States
   const [currentAdminPassword, setCurrentAdminPassword] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
   const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
@@ -114,26 +117,70 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordChangeError, setPasswordChangeError] = useState('');
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState('');
+  const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
+  const [generatedPasswordNotice, setGeneratedPasswordNotice] = useState(false);
+  const [securityLogs, setSecurityLogs] = useState<Array<{ id: string; event: string; timestamp: string; user: string; status: string }>>(() => {
+    try {
+      const raw = localStorage.getItem('ms_admin_security_log');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const getPasswordStrength = (pass: string) => {
+    if (!pass) return { score: 0, label: 'Not Entered', color: 'bg-neutral-200', text: 'text-neutral-400' };
+    let score = 0;
+    if (pass.length >= 6) score += 1;
+    if (pass.length >= 8) score += 1;
+    if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) score += 1;
+    if (/[0-9]/.test(pass)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+
+    if (score <= 2) return { score, label: 'Weak (Need 6+ chars & letters/numbers)', color: 'bg-red-500', text: 'text-red-400' };
+    if (score <= 3) return { score, label: 'Moderate', color: 'bg-amber-500', text: 'text-amber-400' };
+    if (score <= 4) return { score, label: 'Good', color: 'bg-emerald-500', text: 'text-emerald-400' };
+    return { score, label: 'Strong (High Security)', color: 'bg-emerald-400', text: 'text-emerald-300' };
+  };
+
+  const generateStrongPassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
+    let result = '';
+    for (let i = 0; i < 12; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewAdminPassword(result);
+    setConfirmAdminPassword(result);
+    setPasswordChangeError('');
+    setGeneratedPasswordNotice(true);
+    setTimeout(() => setGeneratedPasswordNotice(false), 3000);
+    showToast('Strong password generated & auto-filled.');
+    navigator.clipboard?.writeText(result).catch(() => {});
+  };
 
   const handleUpdatePassword = (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordChangeError('');
     setPasswordChangeSuccess('');
 
-    const activeStoredPassword = localStorage.getItem('ms_admin_password') || 'admin123';
+    const customStored = localStorage.getItem('ms_admin_password');
+    const activeStoredPassword = customStored || 'admin123';
 
-    // Verify current password against active or fallback
-    if (
-      currentAdminPassword.trim() !== activeStoredPassword &&
-      currentAdminPassword.trim() !== 'admin123' &&
-      currentAdminPassword.trim() !== 'shamsuddin786'
-    ) {
-      setPasswordChangeError('Current password is incorrect. Please verify your current password.');
+    // Strict current password verification:
+    // If a custom password is set, ONLY that custom password can be verified!
+    // No bypasses allowed!
+    if (currentAdminPassword.trim() !== activeStoredPassword) {
+      setPasswordChangeError('Current password is incorrect. Please verify and enter your exact current password.');
       return;
     }
 
-    if (!newAdminPassword.trim() || newAdminPassword.trim().length < 4) {
-      setPasswordChangeError('New password must be at least 4 characters long.');
+    if (!newAdminPassword.trim() || newAdminPassword.trim().length < 6) {
+      setPasswordChangeError('New password must be at least 6 characters long for full security.');
+      return;
+    }
+
+    if (newAdminPassword.trim() === activeStoredPassword) {
+      setPasswordChangeError('New password must be different from your current password.');
       return;
     }
 
@@ -142,31 +189,60 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       return;
     }
 
+    const trimmedNewPass = newAdminPassword.trim();
+    const updatedUsername = adminUsernameInput.trim().toLowerCase() || 'admin';
+
     // Save updated credentials
-    localStorage.setItem('ms_admin_password', newAdminPassword.trim());
-    if (adminUsernameInput.trim()) {
-      localStorage.setItem('ms_admin_username', adminUsernameInput.trim().toLowerCase());
-    }
+    localStorage.setItem('ms_admin_password', trimmedNewPass);
+    localStorage.setItem('ms_admin_username', updatedUsername);
+    localStorage.setItem('ms_admin_pw_updated_at', new Date().toISOString());
+
+    // Update security log
+    const newLog = {
+      id: `log-${Date.now()}`,
+      event: 'Password Changed Successfully',
+      timestamp: new Date().toLocaleString(),
+      user: updatedUsername,
+      status: 'updated',
+    };
+    const updatedLogs = [newLog, ...securityLogs].slice(0, 30);
+    setSecurityLogs(updatedLogs);
+    localStorage.setItem('ms_admin_security_log', JSON.stringify(updatedLogs));
 
     setCurrentAdminPassword('');
     setNewAdminPassword('');
     setConfirmAdminPassword('');
-    setPasswordChangeSuccess('Admin password updated successfully! Please use new credentials for future logins.');
-    showToast('Admin password updated successfully.');
+    setPasswordChangeSuccess(
+      `Admin password updated and enforced successfully! Username: "${updatedUsername}". Old default credentials have been disabled.`
+    );
+    showToast('Admin password updated with full security.');
   };
 
   const handleResetPasswordToDefault = () => {
-    if (window.confirm('Reset admin credentials back to default (Username: admin, Password: admin123)?')) {
-      localStorage.removeItem('ms_admin_password');
-      localStorage.removeItem('ms_admin_username');
-      setAdminUsernameInput('admin');
-      setCurrentAdminPassword('');
-      setNewAdminPassword('');
-      setConfirmAdminPassword('');
-      setPasswordChangeError('');
-      setPasswordChangeSuccess('Credentials reset to default (admin / admin123).');
-      showToast('Admin password reset to admin123.');
-    }
+    localStorage.removeItem('ms_admin_password');
+    localStorage.removeItem('ms_admin_username');
+    localStorage.removeItem('ms_admin_pw_updated_at');
+
+    setAdminUsernameInput('admin');
+    setCurrentAdminPassword('');
+    setNewAdminPassword('');
+    setConfirmAdminPassword('');
+    setPasswordChangeError('');
+    setShowResetConfirmModal(false);
+
+    const newLog = {
+      id: `log-${Date.now()}`,
+      event: 'Reset to Factory Defaults',
+      timestamp: new Date().toLocaleString(),
+      user: 'admin',
+      status: 'reset',
+    };
+    const updatedLogs = [newLog, ...securityLogs].slice(0, 30);
+    setSecurityLogs(updatedLogs);
+    localStorage.setItem('ms_admin_security_log', JSON.stringify(updatedLogs));
+
+    setPasswordChangeSuccess('Credentials reset to factory default (Username: admin, Password: admin123).');
+    showToast('Admin credentials reset to admin123.');
   };
 
   // Image Management States
@@ -467,15 +543,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           <div className="flex items-center gap-2.5">
             <button
-              onClick={() => {
-                setActiveTab('settings');
-                setTimeout(() => {
-                  const el = document.getElementById('admin-password-card');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }, 50);
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-xs font-semibold text-[#fef08a] transition-colors cursor-pointer"
-              title="Change Admin Password"
+              onClick={() => setActiveTab('security')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                activeTab === 'security'
+                  ? 'bg-[#d4af37] text-[#0f3422] font-bold'
+                  : 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-[#fef08a]'
+              }`}
+              title="Change Admin Password & Security Settings"
             >
               <KeyRound className="w-3.5 h-3.5 text-[#d4af37]" />
               <span className="hidden sm:inline">Change Password</span>
@@ -646,6 +720,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               >
                 <SettingsIcon className="w-4 h-4" />
                 <span>Settings & SEO</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('security')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
+                  activeTab === 'security'
+                    ? 'bg-[#155e3c] text-white shadow-xs'
+                    : 'text-neutral-700 hover:bg-neutral-200/60'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="w-4 h-4 text-[#d4af37]" />
+                  <span>Security & Password</span>
+                </div>
+                {localStorage.getItem('ms_admin_password') ? (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold border border-emerald-300">
+                    Secure
+                  </span>
+                ) : (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold border border-amber-300">
+                    Default
+                  </span>
+                )}
               </button>
 
               <div className="pt-2 border-t border-neutral-200 space-y-1">
@@ -2846,187 +2943,417 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                 </div>
 
-                {/* ADMIN SECURITY & PASSWORD MANAGEMENT SECTION */}
-                <div
-                  id="admin-password-card"
-                  className="mt-8 p-6 bg-gradient-to-br from-[#0c2417] via-[#091b11] to-[#040e09] text-white rounded-2xl shadow-xl border border-[#d4af37]/40 space-y-5"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#d4af37]/20 border border-[#d4af37]/40 flex items-center justify-center text-[#fef08a] shrink-0">
-                        <KeyRound className="w-5 h-5 text-[#d4af37]" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-heading text-lg font-bold text-white">
-                            Admin Password & Security Settings
-                          </h4>
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-[#d4af37] bg-white/10 px-2 py-0.5 rounded-full border border-[#d4af37]/30">
-                            Protected
-                          </span>
-                        </div>
-                        <p className="text-xs text-emerald-200/80 mt-0.5">
-                          Change your administrator login password and username for website management.
-                        </p>
-                      </div>
+                {/* QUICK ACCESS TO FULL SECURITY & PASSWORD CENTER */}
+                <div className="mt-8 p-6 bg-gradient-to-br from-[#0c2417] via-[#091b11] to-[#040e09] text-white rounded-2xl shadow-xl border border-[#d4af37]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-xl bg-[#d4af37]/20 border border-[#d4af37]/40 flex items-center justify-center text-[#fef08a] shrink-0">
+                      <ShieldCheck className="w-6 h-6 text-[#d4af37]" />
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      {localStorage.getItem('ms_admin_password') ? (
-                        <span className="text-[11px] font-bold text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-500/40 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                          Custom Password Active
-                        </span>
-                      ) : (
-                        <span className="text-[11px] font-medium text-amber-200 bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-500/40 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-amber-400" />
-                          Default (admin123)
-                        </span>
-                      )}
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-heading text-base font-bold text-white">
+                          Administrator Security & Credentials
+                        </h4>
+                        {localStorage.getItem('ms_admin_password') ? (
+                          <span className="text-[10px] font-bold text-emerald-300 bg-emerald-950/90 px-2.5 py-0.5 rounded-full border border-emerald-500/40 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                            Custom Password Protected
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-amber-200 bg-amber-950/90 px-2.5 py-0.5 rounded-full border border-amber-500/40 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            Default (admin123)
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-emerald-100/80 mt-1">
+                        Configure admin username, change password, test strength rules, review security logs, and enforce strict login safeguards.
+                      </p>
                     </div>
                   </div>
 
-                  {passwordChangeError && (
-                    <div className="p-3 bg-red-950/80 border border-red-500/50 rounded-xl text-red-200 text-xs flex items-center gap-2">
-                      <span className="font-bold text-red-400">✕</span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('security')}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#d4af37] hover:bg-[#b89324] text-[#0f2e1e] font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer whitespace-nowrap self-start sm:self-auto"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    <span>Open Security Center</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* DEDICATED ADMIN SECURITY & PASSWORD CENTER TAB */}
+            {activeTab === 'security' && (
+              <div className="space-y-6">
+                {/* Header Section */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-neutral-200">
+                  <div>
+                    <h3 className="font-heading text-2xl font-bold text-neutral-900 flex items-center gap-2">
+                      <ShieldCheck className="w-6 h-6 text-[#155e3c]" />
+                      <span>Security & Password Management Center</span>
+                    </h3>
+                    <p className="text-xs sm:text-sm text-neutral-500">
+                      Enforce strict administrator authentication, update credentials, generate strong passwords, and monitor system security.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {localStorage.getItem('ms_admin_password') ? (
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800 text-xs font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Strict Mode Active (Custom Password Enforced)</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-900 text-xs font-bold">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Action Recommended: Using Factory Default Password</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status Notice Alerts */}
+                {passwordChangeError && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs font-medium flex items-start gap-3 shadow-xs">
+                    <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block font-bold">Security Validation Error:</strong>
                       <span>{passwordChangeError}</span>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {passwordChangeSuccess && (
-                    <div className="p-3 bg-emerald-950/80 border border-emerald-500/50 rounded-xl text-emerald-200 text-xs flex items-center gap-2">
-                      <span className="font-bold text-emerald-400">✓</span>
+                {passwordChangeSuccess && (
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-medium flex items-start gap-3 shadow-xs">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block font-bold">Credentials Updated Successfully:</strong>
                       <span>{passwordChangeSuccess}</span>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  <form onSubmit={handleUpdatePassword} className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Admin Username */}
-                      <div>
-                        <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
-                          Admin Username
-                        </label>
-                        <input
-                          type="text"
-                          value={adminUsernameInput}
-                          onChange={(e) => setAdminUsernameInput(e.target.value)}
-                          placeholder="admin"
-                          required
-                          className="w-full px-3.5 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
-                        />
-                        <span className="text-[10px] text-emerald-200/60 mt-1 block">
-                          Default is 'admin'.
-                        </span>
-                      </div>
+                {generatedPasswordNotice && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[#d4af37]" />
+                      <strong>Strong Password Generated:</strong> Copied to clipboard and pre-filled in New & Confirm password fields.
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-amber-700">Ready to save</span>
+                  </div>
+                )}
 
-                      {/* Current Password */}
-                      <div>
-                        <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
-                          Current Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showCurrentPassword ? 'text' : 'password'}
-                            value={currentAdminPassword}
-                            onChange={(e) => setCurrentAdminPassword(e.target.value)}
-                            placeholder="Enter current password (e.g. admin123)"
-                            required
-                            className="w-full px-3.5 pr-10 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-1"
-                            aria-label="Toggle password visibility"
-                          >
-                            {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
+                {/* Primary Two-Column Grid: Left: Password Form, Right: Security Health & Logs */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column (2 cols): Change Password Form Card */}
+                  <div className="lg:col-span-2 p-6 bg-gradient-to-br from-[#0c2417] via-[#091b11] to-[#040e09] text-white rounded-3xl shadow-xl border border-[#d4af37]/40 space-y-6">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#d4af37]/20 border border-[#d4af37]/40 flex items-center justify-center text-[#fef08a]">
+                          <KeyRound className="w-5 h-5 text-[#d4af37]" />
                         </div>
-                        <span className="text-[10px] text-emerald-200/60 mt-1 block">
-                          Enter your current active password to authenticate.
-                        </span>
-                      </div>
-
-                      {/* New Password */}
-                      <div>
-                        <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
-                          New Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showNewPassword ? 'text' : 'password'}
-                            value={newAdminPassword}
-                            onChange={(e) => setNewAdminPassword(e.target.value)}
-                            placeholder="Enter new strong password"
-                            required
-                            minLength={4}
-                            className="w-full px-3.5 pr-10 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-1"
-                            aria-label="Toggle password visibility"
-                          >
-                            {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
+                        <div>
+                          <h4 className="font-heading text-lg font-bold text-white">
+                            Update Administrator Credentials
+                          </h4>
+                          <p className="text-xs text-emerald-200/80">
+                            Provide your current credentials to authorize changes.
+                          </p>
                         </div>
-                        <span className="text-[10px] text-emerald-200/60 mt-1 block">
-                          Minimum 4 characters (alphanumeric recommended).
-                        </span>
                       </div>
-
-                      {/* Confirm New Password */}
-                      <div>
-                        <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
-                          Confirm New Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            value={confirmAdminPassword}
-                            onChange={(e) => setConfirmAdminPassword(e.target.value)}
-                            placeholder="Repeat new password"
-                            required
-                            minLength={4}
-                            className="w-full px-3.5 pr-10 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-1"
-                            aria-label="Toggle password visibility"
-                          >
-                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                        <span className="text-[10px] text-emerald-200/60 mt-1 block">
-                          Must exactly match the new password.
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3 pt-2">
-                      <button
-                        type="submit"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#d4af37] hover:bg-[#b89324] text-[#0f2e1e] font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
-                      >
-                        <KeyRound className="w-4 h-4" />
-                        <span>Update Admin Password</span>
-                      </button>
 
                       <button
                         type="button"
-                        onClick={handleResetPasswordToDefault}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white/5 hover:bg-red-500/20 text-neutral-300 hover:text-red-200 border border-white/10 hover:border-red-500/30 text-xs font-semibold rounded-xl transition-all cursor-pointer"
-                        title="Reset to default password"
+                        onClick={generateStrongPassword}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-[#fef08a] border border-[#d4af37]/30 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                        title="Generate a random high-entropy strong password"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>Reset to Default (admin / admin123)</span>
+                        <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
+                        <span>Generate Strong Password</span>
                       </button>
                     </div>
-                  </form>
+
+                    <form onSubmit={handleUpdatePassword} className="space-y-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Admin Username Field */}
+                        <div>
+                          <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
+                            Admin Username
+                          </label>
+                          <input
+                            type="text"
+                            value={adminUsernameInput}
+                            onChange={(e) => setAdminUsernameInput(e.target.value)}
+                            placeholder="admin"
+                            required
+                            className="w-full px-3.5 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
+                          />
+                          <span className="text-[10px] text-emerald-200/60 mt-1 block">
+                            Your admin handle (default is <code className="text-[#fef08a]">admin</code>).
+                          </span>
+                        </div>
+
+                        {/* Current Password Field */}
+                        <div>
+                          <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
+                            Current Password <span className="text-red-400">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showCurrentPassword ? 'text' : 'password'}
+                              value={currentAdminPassword}
+                              onChange={(e) => setCurrentAdminPassword(e.target.value)}
+                              placeholder="Enter current password"
+                              required
+                              className="w-full px-3.5 pr-10 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-1"
+                              aria-label="Toggle password visibility"
+                            >
+                              {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          <span className="text-[10px] text-emerald-200/60 mt-1 block">
+                            Strictly verified against your active password.
+                          </span>
+                        </div>
+
+                        {/* New Password Field */}
+                        <div>
+                          <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
+                            New Password <span className="text-red-400">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showNewPassword ? 'text' : 'password'}
+                              value={newAdminPassword}
+                              onChange={(e) => setNewAdminPassword(e.target.value)}
+                              placeholder="Enter new strong password"
+                              required
+                              minLength={6}
+                              className="w-full px-3.5 pr-10 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-1"
+                              aria-label="Toggle password visibility"
+                            >
+                              {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          {/* Live Password Strength Meter */}
+                          {newAdminPassword && (
+                            <div className="mt-2 space-y-1">
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="text-neutral-300">Strength:</span>
+                                <span className={`font-bold ${getPasswordStrength(newAdminPassword).text}`}>
+                                  {getPasswordStrength(newAdminPassword).label}
+                                </span>
+                              </div>
+                              <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full transition-all duration-300 ${getPasswordStrength(newAdminPassword).color}`}
+                                  style={{
+                                    width: `${Math.min(100, Math.max(20, (getPasswordStrength(newAdminPassword).score / 5) * 100))}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Confirm New Password Field */}
+                        <div>
+                          <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
+                            Confirm New Password <span className="text-red-400">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              value={confirmAdminPassword}
+                              onChange={(e) => setConfirmAdminPassword(e.target.value)}
+                              placeholder="Repeat new password"
+                              required
+                              minLength={6}
+                              className="w-full px-3.5 pr-10 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-1"
+                              aria-label="Toggle password visibility"
+                            >
+                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          {confirmAdminPassword && (
+                            <span className="text-[10px] mt-1 block">
+                              {newAdminPassword === confirmAdminPassword ? (
+                                <span className="text-emerald-400 font-medium">✓ Passwords match exactly</span>
+                              ) : (
+                                <span className="text-red-400 font-medium">✕ Passwords do not match</span>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Security Policy Checklist */}
+                      <div className="p-3.5 bg-white/5 border border-white/10 rounded-xl text-[11px] text-emerald-100/90 space-y-1.5">
+                        <span className="font-bold text-[#fef08a] block">Security Enforcement Policy:</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-neutral-300">
+                          <span className={newAdminPassword.length >= 6 ? 'text-emerald-300' : ''}>
+                            {newAdminPassword.length >= 6 ? '✓' : '•'} Minimum 6 characters required
+                          </span>
+                          <span className={/[0-9]/.test(newAdminPassword) ? 'text-emerald-300' : ''}>
+                            {/[0-9]/.test(newAdminPassword) ? '✓' : '•'} At least 1 number recommended
+                          </span>
+                          <span className={newAdminPassword && newAdminPassword === confirmAdminPassword ? 'text-emerald-300' : ''}>
+                            {newAdminPassword && newAdminPassword === confirmAdminPassword ? '✓' : '•'} New & Confirm password match
+                          </span>
+                          <span className="text-emerald-300">
+                            ✓ Default passwords disabled immediately
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Submit & Reset Actions */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                        <button
+                          type="submit"
+                          className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#d4af37] hover:bg-[#b89324] text-[#0f2e1e] font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                        >
+                          <KeyRound className="w-4 h-4" />
+                          <span>Update & Enforce New Password</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowResetConfirmModal(true)}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/5 hover:bg-red-500/20 text-neutral-300 hover:text-red-200 border border-white/10 hover:border-red-500/30 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                          title="Restore factory default credentials"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Reset to Factory Default</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  {/* Right Column (1 col): Security Health & Audit Log */}
+                  <div className="space-y-6">
+                    {/* Security Status Card */}
+                    <div className="p-5 bg-white border border-neutral-200 rounded-3xl shadow-sm space-y-4">
+                      <h4 className="font-heading text-base font-bold text-neutral-900 flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-[#155e3c]" />
+                        <span>Security Health Status</span>
+                      </h4>
+
+                      <div className="space-y-2.5 text-xs">
+                        <div className="flex items-center justify-between py-1.5 border-b border-neutral-100">
+                          <span className="text-neutral-500">Authentication Mode:</span>
+                          <span className="font-bold text-neutral-800">
+                            {localStorage.getItem('ms_admin_password') ? 'Strict Custom Vault' : 'Factory Default'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between py-1.5 border-b border-neutral-100">
+                          <span className="text-neutral-500">Active Admin User:</span>
+                          <span className="font-mono font-bold text-[#155e3c]">
+                            {localStorage.getItem('ms_admin_username') || 'admin'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between py-1.5 border-b border-neutral-100">
+                          <span className="text-neutral-500">Last Password Change:</span>
+                          <span className="font-medium text-neutral-700">
+                            {localStorage.getItem('ms_admin_pw_updated_at')
+                              ? new Date(localStorage.getItem('ms_admin_pw_updated_at')!).toLocaleDateString()
+                              : 'Default'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between py-1.5 border-b border-neutral-100">
+                          <span className="text-neutral-500">Brute-Force Shield:</span>
+                          <span className="font-bold text-emerald-700 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            Active (60s lock)
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between py-1.5">
+                          <span className="text-neutral-500">Session Security:</span>
+                          <span className="font-bold text-emerald-700">
+                            Encrypted Local Storage
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Security Audit Log */}
+                    <div className="p-5 bg-white border border-neutral-200 rounded-3xl shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-heading text-sm font-bold text-neutral-900 flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-neutral-500" />
+                          <span>Recent Security Events</span>
+                        </h4>
+                        {securityLogs.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              localStorage.removeItem('ms_admin_security_log');
+                              setSecurityLogs([]);
+                              showToast('Security audit log cleared.');
+                            }}
+                            className="text-[10px] text-neutral-400 hover:text-red-600 font-semibold cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+
+                      {securityLogs.length === 0 ? (
+                        <p className="text-xs text-neutral-400 italic py-2">
+                          No recent security events logged.
+                        </p>
+                      ) : (
+                        <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                          {securityLogs.slice(0, 6).map((log) => (
+                            <div
+                              key={log.id}
+                              className="p-2.5 bg-neutral-50 rounded-xl text-xs flex items-start justify-between gap-2 border border-neutral-100"
+                            >
+                              <div>
+                                <span className="font-semibold text-neutral-800 block">
+                                  {log.event}
+                                </span>
+                                <span className="text-[10px] text-neutral-400">
+                                  User: {log.user} • {log.timestamp}
+                                </span>
+                              </div>
+                              <span
+                                className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase shrink-0 ${
+                                  log.status === 'success' || log.status === 'updated'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : log.status === 'failed'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-amber-100 text-amber-800'
+                                }`}
+                              >
+                                {log.status}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -3636,6 +3963,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 }`}
               >
                 Add Image Slot
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Safe In-App Confirmation Modal for Factory Reset (No iframe-blocked window.confirm) */}
+      {showResetConfirmModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200 max-w-md w-full p-6 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 border border-red-200 flex items-center justify-center text-red-600">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="font-heading text-lg font-bold text-neutral-900">
+                Reset Administrator Credentials?
+              </h3>
+              <p className="text-xs text-neutral-600 leading-relaxed mt-1">
+                This will remove your custom password and custom username from the secure vault. Your login credentials will revert to factory default:
+              </p>
+            </div>
+
+            <div className="p-3 bg-neutral-100 rounded-xl font-mono text-xs text-neutral-800 space-y-1">
+              <div>Username: <strong className="text-[#155e3c]">admin</strong></div>
+              <div>Password: <strong className="text-[#155e3c]">admin123</strong></div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowResetConfirmModal(false)}
+                className="px-4 py-2 border border-neutral-300 rounded-xl text-xs font-semibold text-neutral-700 hover:bg-neutral-100 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleResetPasswordToDefault}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors cursor-pointer"
+              >
+                Yes, Reset Credentials
               </button>
             </div>
           </div>

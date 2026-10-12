@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, LayoutDashboard, Image as ImageIcon, Puzzle, LogOut, ChevronUp, ChevronDown, Bell, Eye } from 'lucide-react';
+import { Shield, LayoutDashboard, Image as ImageIcon, Puzzle, LogOut, ChevronUp, ChevronDown, Bell, Eye, KeyRound } from 'lucide-react';
 import { EnquiryItem } from '../../types';
 
 interface AdminQuickBarProps {
@@ -96,6 +96,16 @@ export const AdminQuickBar: React.FC<AdminQuickBarProps> = ({
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
             <span>Dashboard</span>
+          </button>
+
+          {/* Change Password / Security */}
+          <button
+            onClick={() => onOpenAdmin('security')}
+            className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-[#fde047] text-xs font-bold border border-amber-400/40 transition-all cursor-pointer"
+            title="Change Admin Password"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-[#d4af37]" />
+            <span className="hidden sm:inline">Password</span>
           </button>
 
           {/* Logout */}

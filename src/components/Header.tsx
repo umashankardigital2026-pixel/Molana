@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, MessageCircle, Menu, X, Lock, Shield, LogOut } from 'lucide-react';
+import { Phone, MessageCircle, Menu, X, Lock, Shield, LogOut, KeyRound } from 'lucide-react';
 import { MosqueLogoIcon } from './IslamicArt';
 import { GeneralSettings } from '../types';
 
@@ -9,7 +9,7 @@ interface HeaderProps {
   onNavigate: (sectionId: string) => void;
   isAdminAuthenticated?: boolean;
   onOpenLogin?: () => void;
-  onOpenAdmin?: () => void;
+  onOpenAdmin?: (tab?: any) => void;
   onLogout?: () => void;
   showAllImages?: boolean;
   onToggleImages?: () => void;
@@ -103,12 +103,20 @@ export const Header: React.FC<HeaderProps> = ({
               {isAdminAuthenticated ? (
                 <div className="flex items-center gap-1.5">
                   <button
-                    onClick={onOpenAdmin}
+                    onClick={() => onOpenAdmin?.('dashboard')}
                     className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-900/90 hover:bg-emerald-800 text-[11px] text-[#fef08a] border border-emerald-500/40 transition-colors cursor-pointer"
                     title="Open Admin Portal"
                   >
                     <Shield className="w-3 h-3 text-[#d4af37]" />
                     <span>Admin Panel</span>
+                  </button>
+                  <button
+                    onClick={() => onOpenAdmin?.('security')}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-[11px] text-[#fef08a] border border-amber-400/40 transition-colors cursor-pointer"
+                    title="Change Admin Password & Security Settings"
+                  >
+                    <KeyRound className="w-3 h-3 text-[#d4af37]" />
+                    <span>Password</span>
                   </button>
                   <button
                     onClick={onLogout}
