@@ -55,7 +55,18 @@ export const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   {showAvatars ? (
-                    <ClientAvatar type={item.avatarType} />
+                    item.avatarUrl ? (
+                      <img
+                        src={item.avatarUrl}
+                        alt={item.name}
+                        className="w-12 h-12 rounded-full object-cover border border-[#d4af37]/40 shadow-xs shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <ClientAvatar type={item.avatarType} />
+                    )
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-[#155e3c] text-[#fef08a] font-bold font-serif flex items-center justify-center border border-[#d4af37]/40 shadow-xs shrink-0 text-sm">
                       {getInitials(item.name)}

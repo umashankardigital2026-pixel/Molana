@@ -12,6 +12,7 @@ export const INITIAL_SLIDES: SliderSlide[] = [
     ctaSecondaryText: '+91 99284 09129',
     ctaSecondaryLink: 'tel:+919928409129',
     scriptQuote: '“Pyar sirf dil se nahi, Rab ki raza se milta hai...”',
+    imageUrl: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1600&q=80',
     displayOrder: 1,
     isActive: true,
     themeStyle: 'love',
@@ -27,6 +28,7 @@ export const INITIAL_SLIDES: SliderSlide[] = [
     ctaSecondaryText: '+91 99284 09129',
     ctaSecondaryLink: 'tel:+919928409129',
     scriptQuote: '“Har mushkil aasan hoti hai jab dua dil se nikalti hai...”',
+    imageUrl: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1600&q=80',
     displayOrder: 2,
     isActive: true,
     themeStyle: 'marriage',
@@ -42,6 +44,7 @@ export const INITIAL_SLIDES: SliderSlide[] = [
     ctaSecondaryText: '+91 99284 09129',
     ctaSecondaryLink: 'tel:+919928409129',
     scriptQuote: '“Allah par yaqeen rakhiye, har andhere ke baad subah aati hai...”',
+    imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1600&q=80',
     displayOrder: 3,
     isActive: true,
     themeStyle: 'ruhani',
@@ -70,6 +73,9 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     recommendedWazifa: 'Surah Al-Furqan Ayat 74 ka tilawat aur Ya Wadoodo ka vird ba-wazu.',
     iconType: 'dua',
     imageTag: 'couple_silhouette',
+    imageUrl: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=800&q=80',
+    imageCaption: 'Loving couple in golden sunset praying for eternal emotional harmony',
+    coupleThemeTag: 'Dua For Lovers',
     displayOrder: 1,
     isActive: true,
     metaTitle: 'Dua For Love - Islamic Dua For Relationship Peace | Maulana Shamsuddin',
@@ -96,6 +102,9 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     recommendedWazifa: 'Ya Jamiu Ya Wadoodo 1100 martaba baad namaz-e-Isha.',
     iconType: 'wazifa',
     imageTag: 'quran_rehal',
+    imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80',
+    imageCaption: 'Lovers reciting sacred wazifa holding hands in mutual commitment',
+    coupleThemeTag: 'Wazifa For Couples',
     displayOrder: 2,
     isActive: true,
     metaTitle: 'Wazifa For Love - Powerful Islamic Wazifa Guidance | Maulana Shamsuddin',
@@ -122,6 +131,9 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     recommendedWazifa: 'Ayat-ul-Kursi aur Charon Qul subah o sham hifazat ke liye.',
     iconType: 'ruhani',
     imageTag: 'hands_supplication',
+    imageUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=800&q=80',
+    imageCaption: 'Deep spiritual bond and soulmate connection with divine blessings',
+    coupleThemeTag: 'Spiritual Love Bonding',
     displayOrder: 3,
     isActive: true,
     metaTitle: 'Ruhani Ilm & Spiritual Consultation | Maulana Shamsuddin',
@@ -148,6 +160,9 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     recommendedWazifa: 'Taweez ke sath rozana Surah Falaq aur Surah Naas ka wird zaroori hai.',
     iconType: 'taweez',
     imageTag: 'taweez_pendant',
+    imageUrl: 'https://images.unsplash.com/photo-1494774157365-9e04c6720e47?auto=format&fit=crop&w=800&q=80',
+    imageCaption: 'Couple protected from evil eye and negative interference under sacred taweez',
+    coupleThemeTag: 'Protected Love & Peace',
     displayOrder: 4,
     isActive: true,
     metaTitle: 'Islamic Taweez For Protection & Blessings | Maulana Shamsuddin',
@@ -174,6 +189,9 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     recommendedWazifa: 'Surah Taha ki makhsoos aayat ka zikr har namaz ke baad.',
     iconType: 'marriage',
     imageTag: 'wedding_couple',
+    imageUrl: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=800&q=80',
+    imageCaption: 'Joyful traditional Muslim wedding couple celebrating approved love marriage',
+    coupleThemeTag: 'Love Marriage & Nikkah',
     displayOrder: 5,
     isActive: true,
     metaTitle: 'Love Marriage Dua & Guidance | Maulana Shamsuddin',
@@ -200,10 +218,80 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     recommendedWazifa: 'Ya Lateefu Ya Wadoodo 100 martaba rozana shant mahol mein.',
     iconType: 'relationship',
     imageTag: 'broken_heart_mended',
+    imageUrl: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?auto=format&fit=crop&w=800&q=80',
+    imageCaption: 'Husband and wife peacefully reconciled after clearing misunderstandings',
+    coupleThemeTag: 'Husband & Wife Reconciliation',
     displayOrder: 6,
     isActive: true,
     metaTitle: 'Husband Wife Relationship Problem Solution | Maulana Shamsuddin',
     metaDescription: 'Resolve marital disputes, communication gaps, and family misunderstandings with spiritual guidance.'
+  }
+];
+
+export const COUPLE_PHOTO_PRESETS = [
+  {
+    id: 'preset-1',
+    serviceId: 'srv-1',
+    title: 'Dua For Love: Lovers Golden Sunset',
+    category: 'Romantic Lovers',
+    imageUrl: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=800&q=80',
+    description: 'Tender couple in golden sunset praying for emotional harmony and unbreakable bond'
+  },
+  {
+    id: 'preset-2',
+    serviceId: 'srv-2',
+    title: 'Wazifa For Love: Hands With Rings & Commitment',
+    category: 'Devoted Lovers',
+    imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80',
+    description: 'Interlocked hands of lovers holding tight in sacred commitment and wazifa power'
+  },
+  {
+    id: 'preset-3',
+    serviceId: 'srv-3',
+    title: 'Ruhani Ilm: Spiritual Light & Lovers Touch',
+    category: 'Soulmate Connection',
+    imageUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=800&q=80',
+    description: 'Gentle affectionate touch between lovers bathed in warm celestial glow'
+  },
+  {
+    id: 'preset-4',
+    serviceId: 'srv-4',
+    title: 'Taweez: Protected Lovers Embracing at Twilight',
+    category: 'Spiritual Protection',
+    imageUrl: 'https://images.unsplash.com/photo-1494774157365-9e04c6720e47?auto=format&fit=crop&w=800&q=80',
+    description: 'Couple looking at the peaceful horizon protected from evil eye and rivalry'
+  },
+  {
+    id: 'preset-5',
+    serviceId: 'srv-5',
+    title: 'Love Marriage: Nikkah Bride & Groom Celebration',
+    category: 'Wedding Couple',
+    imageUrl: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=800&q=80',
+    description: 'Traditional South Asian / Muslim wedding bride and groom smiling happily'
+  },
+  {
+    id: 'preset-6',
+    serviceId: 'srv-6',
+    title: 'Relationship Problem: Reconciled Husband & Wife',
+    category: 'Marital Peace',
+    imageUrl: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?auto=format&fit=crop&w=800&q=80',
+    description: 'Husband and wife overcoming conflict and embracing with renewed affection'
+  },
+  {
+    id: 'preset-7',
+    serviceId: 'srv-1',
+    title: 'Alternative: Couple Walking Hand in Hand',
+    category: 'Romance & Harmony',
+    imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+    description: 'Couple walking together in serenity, holding hands through lifes journey'
+  },
+  {
+    id: 'preset-8',
+    serviceId: 'srv-5',
+    title: 'Alternative: Wedding Rings & Sacred Nikkah',
+    category: 'Nikkah & Rings',
+    imageUrl: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=800&q=80',
+    description: 'Traditional sacred wedding celebration with golden rings and floral joy'
   }
 ];
 
@@ -216,6 +304,7 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
     rating: 5,
     serviceCategory: 'Love Marriage Guidance',
     avatarType: 'couple',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&h=200&q=80',
     isApproved: true,
     createdAt: '2025-05-14',
   },
@@ -227,6 +316,7 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
     rating: 5,
     serviceCategory: 'Wazifa & Taweez',
     avatarType: 'man',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&h=200&q=80',
     isApproved: true,
     createdAt: '2025-06-22',
   },
@@ -238,9 +328,74 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
     rating: 5,
     serviceCategory: 'Relationship Solution',
     avatarType: 'woman',
+    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&h=200&q=80',
     isApproved: true,
     createdAt: '2025-07-10',
   },
+];
+
+export const SPIRITUAL_PHOTO_PRESETS = [
+  {
+    id: 'sp-1',
+    title: 'Holy Quran with Golden Lantern Glow',
+    category: 'About Maulana / Quran',
+    imageUrl: 'https://images.unsplash.com/photo-1609599006353-e629aaabfeae?auto=format&fit=crop&w=800&q=80',
+    description: 'Serene holy scripture illuminated by spiritual light and lantern'
+  },
+  {
+    id: 'sp-2',
+    title: 'Grand Mosque & Minarets at Twilight',
+    category: 'Mosque & Skyline',
+    imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80',
+    description: 'Majestic Islamic architectural silhouette under starry sky'
+  },
+  {
+    id: 'sp-3',
+    title: 'Hands in Dua & Supplication',
+    category: 'Dua & Prayer',
+    imageUrl: 'https://images.unsplash.com/photo-1564769625905-50e93615e769?auto=format&fit=crop&w=800&q=80',
+    description: 'Devoted hands raised in heartfelt prayer and surrender to Allah'
+  },
+  {
+    id: 'sp-4',
+    title: 'Spiritual Islamic Rosary (Tasbih)',
+    category: 'Wazifa & Zikr',
+    imageUrl: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?auto=format&fit=crop&w=800&q=80',
+    description: 'Pakeezah wooden prayer beads for sacred zikr and peace'
+  }
+];
+
+export const CLIENT_AVATAR_PRESETS = [
+  {
+    id: 'av-1',
+    name: 'Ayesha (Married)',
+    type: 'woman',
+    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&h=200&q=80',
+  },
+  {
+    id: 'av-2',
+    name: 'Rizwan (Husband)',
+    type: 'man',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&h=200&q=80',
+  },
+  {
+    id: 'av-3',
+    name: 'Sana (Client)',
+    type: 'woman',
+    imageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&h=200&q=80',
+  },
+  {
+    id: 'av-4',
+    name: 'Tariq (Brother)',
+    type: 'man',
+    imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&h=200&q=80',
+  },
+  {
+    id: 'av-5',
+    name: 'Happy Couple Profile',
+    type: 'couple',
+    imageUrl: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?auto=format&fit=crop&w=200&h=200&q=80',
+  }
 ];
 
 export const INITIAL_ENQUIRIES: EnquiryItem[] = [

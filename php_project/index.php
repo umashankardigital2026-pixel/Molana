@@ -156,9 +156,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_enquiry'])) {
             <div class="row g-4">
                 <?php foreach ($services as $srv): ?>
                 <div class="col-md-6 col-lg-4">
-                    <div class="service-card h-100 p-4 text-center d-flex flex-column justify-content-between">
+                    <div class="service-card h-100 p-3 text-center d-flex flex-column justify-content-between">
                         <div>
-                            <div class="py-3 text-success"><i class="fas fa-quran fa-3x"></i></div>
+                            <?php if (!empty($srv['image_url'])): ?>
+                                <div class="mb-3 rounded-4 overflow-hidden position-relative shadow-sm" style="height: 180px;">
+                                    <img src="<?= htmlspecialchars($srv['image_url']) ?>" alt="<?= htmlspecialchars($srv['title']) ?>" class="w-100 h-100 object-fit-cover">
+                                    <span class="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 text-warning border border-warning" style="font-size: 0.7rem;">Roohani Couple Guidance</span>
+                                </div>
+                            <?php else: ?>
+                                <div class="py-3 text-success"><i class="fas fa-quran fa-3x"></i></div>
+                            <?php endif; ?>
                             <h4 class="font-heading fw-bold mb-2"><?= htmlspecialchars($srv['title']) ?></h4>
                             <p class="text-muted small"><?= htmlspecialchars($srv['short_description']) ?></p>
                         </div>

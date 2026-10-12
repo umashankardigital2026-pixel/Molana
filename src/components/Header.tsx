@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, MessageCircle, Menu, X, Shield, Lock } from 'lucide-react';
+import { Phone, MessageCircle, Menu, X } from 'lucide-react';
 import { MosqueLogoIcon } from './IslamicArt';
 import { GeneralSettings } from '../types';
 
@@ -7,20 +7,19 @@ interface HeaderProps {
   settings: GeneralSettings;
   announcementText: string;
   onNavigate: (sectionId: string) => void;
-  onOpenAdmin: () => void;
+  onOpenAdmin?: () => void;
   showAllImages?: boolean;
   onToggleImages?: () => void;
+  onOpenImageManager?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   settings,
   announcementText,
   onNavigate,
-  onOpenAdmin,
-  showAllImages = true,
-  onToggleImages,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const customLogo = settings.logoUrl || settings.imageSettings?.customImages?.['logo'];
 
   const navItems = [
     { label: 'Home', id: 'home' },
@@ -91,25 +90,6 @@ export const Header: React.FC<HeaderProps> = ({
                 <MessageCircle className="w-3.5 h-3.5" />
               </a>
             </div>
-
-            {onToggleImages && (
-              <button
-                onClick={onToggleImages}
-                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 text-[11px] text-emerald-300 border border-emerald-600/30 transition-colors"
-                title={showAllImages ? 'Click to Remove All Images' : 'Click to Restore All Images'}
-              >
-                <span>{showAllImages ? '🖼️ Images: ON' : '🚫 Images: OFF'}</span>
-              </button>
-            )}
-
-            <button
-              onClick={onOpenAdmin}
-              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 text-[11px] text-[#d4af37] border border-[#d4af37]/30 transition-colors"
-              title="Admin Panel Login & Management"
-            >
-              <Lock className="w-3 h-3" />
-              <span>Admin Panel</span>
-            </button>
           </div>
         </div>
       </div>
@@ -122,7 +102,18 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => handleNavClick('home')}
             className="flex items-center gap-3 cursor-pointer group select-none"
           >
-            <MosqueLogoIcon size={46} className="shrink-0 group-hover:scale-105 transition-transform" />
+            {customLogo ? (
+              <img
+                src={customLogo}
+                alt={settings.siteName}
+                className="w-12 h-12 object-contain rounded-xl border border-emerald-600/20 shrink-0 group-hover:scale-105 transition-transform"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : (
+              <MosqueLogoIcon size={46} className="shrink-0 group-hover:scale-105 transition-transform" />
+            )}
             <div className="flex flex-col">
               <span className="font-heading text-xl sm:text-2xl font-bold tracking-tight text-[#155e3c] leading-tight">
                 {settings.siteName}

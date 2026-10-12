@@ -39,7 +39,23 @@ export default function App() {
 
   const [services, setServices] = useState<ServiceItem[]>(() => {
     const saved = localStorage.getItem('ms_services');
-    return saved ? JSON.parse(saved) : INITIAL_SERVICES;
+    if (!saved) return INITIAL_SERVICES;
+    try {
+      const parsed: ServiceItem[] = JSON.parse(saved);
+      return parsed.map((item) => {
+        const initial = INITIAL_SERVICES.find((i) => i.id === item.id);
+        if (!initial) return item;
+        return {
+          ...initial,
+          ...item,
+          imageUrl: item.imageUrl || initial.imageUrl,
+          coupleThemeTag: item.coupleThemeTag || initial.coupleThemeTag,
+          imageCaption: item.imageCaption || initial.imageCaption,
+        };
+      });
+    } catch {
+      return INITIAL_SERVICES;
+    }
   });
 
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>(() => {
@@ -90,7 +106,39 @@ export default function App() {
   // Modals & UI States
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [adminInitialTab, setAdminInitialTab] = useState<
+    'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source'
+  >('dashboard');
   const [prefilledServiceConsultation, setPrefilledServiceConsultation] = useState('');
+
+  // Support #admin, #images and Ctrl+Shift+A for administrative access
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash === '#admin') {
+        setAdminInitialTab('dashboard');
+        setIsAdminOpen(true);
+      } else if (window.location.hash === '#images') {
+        setAdminInitialTab('images');
+        setIsAdminOpen(true);
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        setAdminInitialTab('dashboard');
+        setIsAdminOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHash);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Legal Modals
   const [legalModalState, setLegalModalState] = useState<{
@@ -137,32 +185,6 @@ export default function App() {
         settings={settings}
         announcementText={content.announcementText}
         onNavigate={scrollToSection}
-        onOpenAdmin={() => setIsAdminOpen(true)}
-        showAllImages={settings.imageSettings?.showAllImages ?? true}
-        onToggleImages={() => {
-          const current = settings.imageSettings?.showAllImages ?? true;
-          const target = !current;
-          setSettings({
-            ...settings,
-            imageSettings: {
-              ...(settings.imageSettings || {
-                showAllImages: true,
-                showHeroImages: true,
-                showServiceImages: true,
-                showAboutImage: true,
-                showWhyChooseSkyline: true,
-                showTestimonialAvatars: true,
-                customImages: {},
-              }),
-              showAllImages: target,
-              showHeroImages: target,
-              showServiceImages: target,
-              showAboutImage: target,
-              showWhyChooseSkyline: target,
-              showTestimonialAvatars: target,
-            },
-          });
-        }}
       />
 
       {/* Main Content Area */}
@@ -297,7 +319,13 @@ Sabka Bhala, Sabka Sukoon. Dua aur wazifa qalb ke itminaan aur roohani barkat ke
           setContent={setContent}
           settings={settings}
           setSettings={setSettings}
-          onClose={() => setIsAdminOpen(false)}
+          initialTab={adminInitialTab}
+          onClose={() => {
+            setIsAdminOpen(false);
+            if (window.location.hash === '#admin' || window.location.hash === '#images') {
+              window.history.replaceState(null, '', window.location.pathname + window.location.search);
+            }
+          }}
         />
       )}
     </div>

@@ -13,6 +13,8 @@ export const WhyChooseUs: React.FC<WhyChooseUsProps> = ({ content, imageSettings
     imageSettings === undefined ||
     (imageSettings.showAllImages && imageSettings.showWhyChooseSkyline);
 
+  const customWhyChooseImg = imageSettings?.customImages?.['whychoose'];
+
   const icons = [
     <UserCheck key="0" className="w-6 h-6 text-[#155e3c]" />,
     <Lock key="1" className="w-6 h-6 text-[#155e3c]" />,
@@ -23,8 +25,16 @@ export const WhyChooseUs: React.FC<WhyChooseUsProps> = ({ content, imageSettings
 
   return (
     <section className="relative py-16 sm:py-24 bg-[#ebf5f0] overflow-hidden border-b border-emerald-100">
-      {/* Decorative Mosque Silhouette on the right (matches screenshot) */}
-      {showSkyline && <MosqueSkylineRight />}
+      {/* Decorative Mosque Silhouette or custom graphic on the right */}
+      {showSkyline && (
+        customWhyChooseImg ? (
+          <div className="absolute right-0 top-0 bottom-0 w-1/3 max-w-md pointer-events-none opacity-25 overflow-hidden mix-blend-multiply hidden md:block">
+            <img src={customWhyChooseImg} alt="Why Choose Us" className="w-full h-full object-cover" />
+          </div>
+        ) : (
+          <MosqueSkylineRight />
+        )
+      )}
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Heading */}

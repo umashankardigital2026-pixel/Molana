@@ -24,6 +24,12 @@ import {
   Image as ImageIcon,
   Upload,
   RefreshCw,
+  Heart,
+  Sparkles,
+  Filter,
+  Camera,
+  FolderPlus,
+  Sliders,
 } from 'lucide-react';
 import {
   SliderSlide,
@@ -33,6 +39,14 @@ import {
   WebsiteContent,
   GeneralSettings,
 } from '../../types';
+import {
+  COUPLE_PHOTO_PRESETS,
+  SPIRITUAL_PHOTO_PRESETS,
+  CLIENT_AVATAR_PRESETS,
+  INITIAL_SERVICES,
+  INITIAL_SLIDES,
+  INITIAL_TESTIMONIALS,
+} from '../../data/initialData';
 
 interface AdminPanelProps {
   slides: SliderSlide[];
@@ -47,6 +61,7 @@ interface AdminPanelProps {
   setContent: React.Dispatch<React.SetStateAction<WebsiteContent>>;
   settings: GeneralSettings;
   setSettings: React.Dispatch<React.SetStateAction<GeneralSettings>>;
+  initialTab?: 'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source';
   onClose: () => void;
 }
 
@@ -63,12 +78,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   setContent,
   settings,
   setSettings,
+  initialTab = 'dashboard',
   onClose,
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source'
-  >('dashboard');
+  >(initialTab);
 
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -81,6 +97,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [selectedImageTarget, setSelectedImageTarget] = useState('slide-1');
   const [customImageUrlInput, setCustomImageUrlInput] = useState('');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Universal Replace Modal State
+  const [replaceModalSlot, setReplaceModalSlot] = useState<{
+    id: string;
+    title: string;
+    category: string;
+    currentUrl?: string;
+    coupleThemeTag?: string;
+    imageCaption?: string;
+  } | null>(null);
+
+  const [replaceModalTab, setReplaceModalTab] = useState<
+    'couple' | 'spiritual' | 'avatars' | 'upload' | 'url'
+  >('couple');
+  const [replaceUploadUrl, setReplaceUploadUrl] = useState('');
+  const [replaceCustomTag, setReplaceCustomTag] = useState('');
+  const [replaceCustomCaption, setReplaceCustomCaption] = useState('');
+  const [imageDirectoryFilter, setImageDirectoryFilter] = useState<
+    'all' | 'services' | 'slides' | 'branding' | 'testimonials' | 'custom'
+  >('all');
+  const [showAddCustomSlotModal, setShowAddCustomSlotModal] = useState(false);
+  const [newCustomSlotKey, setNewCustomSlotKey] = useState('');
+  const [newCustomSlotUrl, setNewCustomSlotUrl] = useState('');
 
   const currentImageSettings = settings.imageSettings || {
     showAllImages: true,
@@ -115,41 +154,197 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     showToast(`Image visibility for ${String(key)} updated.`);
   };
 
+  // Centralized apply image to any slot (slide, service, testimonial, about, logo, or custom)
+  const applyImageToSlot = (
+    slotId: string,
+    url: string,
+    tag?: string,
+    caption?: string
+  ) => {
+    if (!url.trim()) return;
+
+    // 1. If it's a slide
+    if (slotId.startsWith('slide-')) {
+      const updatedSlides = slides.map((s) =>
+        s.id === slotId ? { ...s, imageUrl: url } : s
+      );
+      setSlides(updatedSlides);
+    }
+
+    // 2. If it's a service
+    if (slotId.startsWith('srv-')) {
+      const updatedServices = services.map((s) => {
+        if (s.id === slotId) {
+          return {
+            ...s,
+            imageUrl: url,
+            coupleThemeTag: tag !== undefined ? tag : s.coupleThemeTag,
+            imageCaption: caption !== undefined ? caption : s.imageCaption,
+          };
+        }
+        return s;
+      });
+      setServices(updatedServices);
+    }
+
+    // 3. If it's a testimonial
+    if (slotId.startsWith('test-')) {
+      const updatedTestimonials = testimonials.map((t) =>
+        t.id === slotId ? { ...t, avatarUrl: url } : t
+      );
+      setTestimonials(updatedTestimonials);
+    }
+
+    // 4. If it's about
+    let aboutImg = currentImageSettings.aboutCustomImage;
+    if (slotId === 'about') {
+      aboutImg = url;
+    }
+
+    // 5. If it's logo
+    let updatedLogo = settings.logoUrl;
+    if (slotId === 'logo') {
+      updatedLogo = url;
+    }
+
+    // 6. Update customImages registry and imageSettings
+    const updatedCustom = {
+      ...(currentImageSettings.customImages || {}),
+      [slotId]: url,
+    };
+
+    setSettings({
+      ...settings,
+      logoUrl: updatedLogo,
+      imageSettings: {
+        ...currentImageSettings,
+        showAllImages: true,
+        aboutCustomImage: aboutImg,
+        customImages: updatedCustom,
+      },
+    });
+
+    showToast(`Image applied successfully to ${slotId}!`);
+  };
+
+  // Centralized remove image from any slot
+  const removeImageFromSlot = (slotId: string) => {
+    // 1. If slide
+    if (slotId.startsWith('slide-')) {
+      setSlides(slides.map((s) => (s.id === slotId ? { ...s, imageUrl: '' } : s)));
+    }
+
+    // 2. If service
+    if (slotId.startsWith('srv-')) {
+      setServices(
+        services.map((s) =>
+          s.id === slotId
+            ? { ...s, imageUrl: '', coupleThemeTag: '', imageCaption: '' }
+            : s
+        )
+      );
+    }
+
+    // 3. If testimonial
+    if (slotId.startsWith('test-')) {
+      setTestimonials(
+        testimonials.map((t) => (t.id === slotId ? { ...t, avatarUrl: '' } : t))
+      );
+    }
+
+    // 4. If about
+    let aboutImg = currentImageSettings.aboutCustomImage;
+    if (slotId === 'about') {
+      aboutImg = '';
+    }
+
+    // 5. If logo
+    let updatedLogo = settings.logoUrl;
+    if (slotId === 'logo') {
+      updatedLogo = '';
+    }
+
+    // 6. Delete from customImages
+    const updatedCustom = { ...(currentImageSettings.customImages || {}) };
+    delete updatedCustom[slotId];
+
+    setSettings({
+      ...settings,
+      logoUrl: updatedLogo,
+      imageSettings: {
+        ...currentImageSettings,
+        aboutCustomImage: aboutImg,
+        customImages: updatedCustom,
+      },
+    });
+
+    showToast(`Image removed from ${slotId}. Default visual fallback activated.`);
+  };
+
   const handleApplyCustomImage = () => {
     if (!previewImage && !customImageUrlInput.trim()) {
       showToast('Please select a file or enter an image URL.');
       return;
     }
     const targetUrl = previewImage || customImageUrlInput.trim();
-    const updatedCustom = {
-      ...(currentImageSettings.customImages || {}),
-      [selectedImageTarget]: targetUrl,
-    };
-    const updatedSettings = {
-      ...settings,
-      imageSettings: {
-        ...currentImageSettings,
-        showAllImages: true,
-        customImages: updatedCustom,
-      },
-    };
-    setSettings(updatedSettings);
+    applyImageToSlot(selectedImageTarget, targetUrl);
     setCustomImageUrlInput('');
     setPreviewImage(null);
-    showToast(`Image applied successfully to ${selectedImageTarget}!`);
   };
 
   const handleRemoveCustomImage = (targetId: string) => {
-    const updatedCustom = { ...(currentImageSettings.customImages || {}) };
-    delete updatedCustom[targetId];
+    removeImageFromSlot(targetId);
+  };
+
+  const restoreAllDefaultImages = () => {
+    const updatedSlides = slides.map((s) => {
+      const init = INITIAL_SLIDES.find((i) => i.id === s.id);
+      return init?.imageUrl ? { ...s, imageUrl: init.imageUrl } : s;
+    });
+    setSlides(updatedSlides);
+
+    const updatedServices = services.map((s) => {
+      const init = INITIAL_SERVICES.find((i) => i.id === s.id);
+      return init?.imageUrl
+        ? {
+            ...s,
+            imageUrl: init.imageUrl,
+            coupleThemeTag: init.coupleThemeTag,
+            imageCaption: init.imageCaption,
+          }
+        : s;
+    });
+    setServices(updatedServices);
+
+    const updatedTestimonials = testimonials.map((t) => {
+      const init = INITIAL_TESTIMONIALS.find((i) => i.id === t.id);
+      return init?.avatarUrl ? { ...t, avatarUrl: init.avatarUrl } : t;
+    });
+    setTestimonials(updatedTestimonials);
+
+    const restoredCustom: Record<string, string> = {};
+    updatedServices.forEach((s) => {
+      if (s.imageUrl) restoredCustom[s.id] = s.imageUrl;
+    });
+    updatedSlides.forEach((s) => {
+      if (s.imageUrl) restoredCustom[s.id] = s.imageUrl;
+    });
+
     setSettings({
       ...settings,
       imageSettings: {
         ...currentImageSettings,
-        customImages: updatedCustom,
+        showAllImages: true,
+        showHeroImages: true,
+        showServiceImages: true,
+        showAboutImage: true,
+        showWhyChooseSkyline: true,
+        showTestimonialAvatars: true,
+        customImages: restoredCustom,
       },
     });
-    showToast(`Custom image removed from ${targetId}.`);
+
+    showToast('All default photography and couple photos restored successfully!');
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -732,6 +927,100 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             className="w-full px-3 py-2 bg-white border border-neutral-300 rounded-lg text-xs"
                           />
                         </div>
+
+                        {/* Slide Image Controls (Add, Remove, Replace) */}
+                        <div className="md:col-span-2 p-3.5 bg-white border border-neutral-200 rounded-xl space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <label className="font-bold text-neutral-800 flex items-center gap-1.5 text-xs">
+                              <ImageIcon className="w-4 h-4 text-[#155e3c]" />
+                              <span>Slide Background Image</span>
+                            </label>
+                            {slide.imageUrl ? (
+                              <span className="text-[10px] text-emerald-800 bg-emerald-100 font-semibold px-2 py-0.5 rounded-full">
+                                ✓ Photo Active
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-full">
+                                Clean Islamic Silk Backdrop
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row items-center gap-3">
+                            <div className="w-24 h-16 rounded-lg overflow-hidden bg-neutral-900 border border-neutral-200 shrink-0 relative group">
+                              {slide.imageUrl ? (
+                                <img src={slide.imageUrl} alt={slide.heading} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[9px] text-neutral-400 text-center p-1 bg-gradient-to-br from-emerald-950 to-neutral-900">
+                                  Default Artwork
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex-1 w-full space-y-1.5">
+                              <input
+                                type="url"
+                                value={slide.imageUrl || ''}
+                                placeholder="Enter image URL or upload below..."
+                                onChange={(e) => {
+                                  const updated = slides.map((s) =>
+                                    s.id === slide.id ? { ...s, imageUrl: e.target.value } : s
+                                  );
+                                  setSlides(updated);
+                                }}
+                                className="w-full px-2.5 py-1.5 bg-neutral-50 border border-neutral-300 rounded-lg text-xs font-mono"
+                              />
+
+                              <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                                <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-[#155e3c] font-bold rounded-lg text-[11px] border border-emerald-200 transition-colors">
+                                  <Upload className="w-3 h-3" />
+                                  <span>Upload Photo</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file) return;
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        applyImageToSlot(slide.id, ev.target?.result as string);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }}
+                                  />
+                                </label>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setReplaceModalSlot({
+                                      id: slide.id,
+                                      title: slide.heading,
+                                      category: 'Hero Slides',
+                                      currentUrl: slide.imageUrl,
+                                    })
+                                  }
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded-lg text-[11px] transition-colors"
+                                >
+                                  <RefreshCw className="w-3 h-3" />
+                                  <span>Replace Photo</span>
+                                </button>
+
+                                {slide.imageUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeImageFromSlot(slide.id)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-lg text-[11px] transition-colors"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    <span>Remove Photo</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -912,6 +1201,171 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                           />
                         </div>
+
+                        {/* Couple & Lover Photo Configuration */}
+                        <div className="md:col-span-2 p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-200/80 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-neutral-800 flex items-center gap-1.5 text-xs">
+                              <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500/30" />
+                              <span>Relevant Couple / Lover Photo & Theme Tag</span>
+                            </span>
+                            {srv.imageUrl && (
+                              <span className="text-[10px] text-emerald-800 bg-emerald-100 font-semibold px-2 py-0.5 rounded-full">
+                                Photo Active
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                            <div className="sm:col-span-8 space-y-2">
+                              <div>
+                                <label className="text-[11px] font-semibold text-neutral-600 block">
+                                  Couple Photo URL
+                                </label>
+                                <input
+                                  type="url"
+                                  value={srv.imageUrl || ''}
+                                  placeholder="https://images.unsplash.com/..."
+                                  onChange={(e) => {
+                                    const updated = services.map((s) =>
+                                      s.id === srv.id ? { ...s, imageUrl: e.target.value } : s
+                                    );
+                                    setServices(updated);
+                                  }}
+                                  className="w-full px-2.5 py-1.5 bg-white border border-neutral-300 rounded-lg text-xs font-mono"
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="text-[11px] font-semibold text-neutral-600 block">
+                                    Theme Badge Tag
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={srv.coupleThemeTag || ''}
+                                    placeholder="e.g. Dua For Lovers"
+                                    onChange={(e) => {
+                                      const updated = services.map((s) =>
+                                        s.id === srv.id ? { ...s, coupleThemeTag: e.target.value } : s
+                                      );
+                                      setServices(updated);
+                                    }}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-neutral-300 rounded-lg text-xs"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[11px] font-semibold text-neutral-600 block">
+                                    Photo Caption
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={srv.imageCaption || ''}
+                                    placeholder="e.g. Loving couple in golden sunset..."
+                                    onChange={(e) => {
+                                      const updated = services.map((s) =>
+                                        s.id === srv.id ? { ...s, imageCaption: e.target.value } : s
+                                      );
+                                      setServices(updated);
+                                    }}
+                                    className="w-full px-2.5 py-1.5 bg-white border border-neutral-300 rounded-lg text-xs"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="sm:col-span-4 flex flex-col items-center justify-center gap-2">
+                              {srv.imageUrl ? (
+                                <div className="w-full h-24 rounded-lg overflow-hidden border border-neutral-300 shadow-2xs relative group">
+                                  <img
+                                    src={srv.imageUrl}
+                                    alt={srv.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                  <span className="absolute bottom-1 left-1 text-[9px] text-white px-1.5 py-0.5 rounded bg-black/60">
+                                    {srv.coupleThemeTag || 'Preview'}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="w-full h-24 rounded-lg border border-dashed border-neutral-300 bg-white flex items-center justify-center text-[11px] text-neutral-400 text-center p-2">
+                                  No photo (Default Islamic artwork active)
+                                </div>
+                              )}
+
+                              {/* Service Photo Actions: Add / Replace / Remove */}
+                              <div className="flex flex-wrap items-center justify-center gap-1.5 w-full">
+                                <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-[#155e3c] font-bold rounded text-[10px] border border-emerald-200">
+                                  <Upload className="w-2.5 h-2.5" />
+                                  <span>Upload</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file) return;
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        applyImageToSlot(srv.id, ev.target?.result as string, srv.coupleThemeTag, srv.imageCaption);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }}
+                                  />
+                                </label>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setReplaceModalSlot({
+                                      id: srv.id,
+                                      title: srv.title,
+                                      category: 'Spiritual Services',
+                                      currentUrl: srv.imageUrl,
+                                      coupleThemeTag: srv.coupleThemeTag,
+                                      imageCaption: srv.imageCaption,
+                                    })
+                                  }
+                                  className="inline-flex items-center gap-1 px-2 py-1 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded text-[10px]"
+                                >
+                                  <RefreshCw className="w-2.5 h-2.5" />
+                                  <span>Replace</span>
+                                </button>
+
+                                {srv.imageUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeImageFromSlot(srv.id)}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded text-[10px]"
+                                    title="Remove this photo"
+                                  >
+                                    <Trash2 className="w-2.5 h-2.5" />
+                                    <span>Remove</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Quick Preset Selector for this service */}
+                          <div className="pt-2 border-t border-emerald-200/60 flex items-center gap-2 overflow-x-auto text-[11px]">
+                            <span className="text-[10px] font-bold text-neutral-500 uppercase shrink-0">
+                              Quick Presets:
+                            </span>
+                            {COUPLE_PHOTO_PRESETS.slice(0, 4).map((p) => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() =>
+                                  applyImageToSlot(srv.id, p.imageUrl, p.category, p.description)
+                                }
+                                className="px-2 py-0.5 rounded bg-white hover:bg-emerald-100 text-neutral-700 border border-neutral-200 text-[10px] shrink-0 font-medium transition-colors"
+                              >
+                                {p.category}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -924,72 +1378,120 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="space-y-6">
                 <div>
                   <h3 className="font-heading text-2xl font-bold text-neutral-900">
-                    Image & Visual Asset Management
+                    Complete Image Management System
                   </h3>
                   <p className="text-xs sm:text-sm text-neutral-500">
-                    Add custom images, replace existing visuals, or remove all images across the website with a single click.
+                    Add new images, replace any existing visual asset, or remove images across the entire website with 1 click.
                   </p>
                 </div>
 
-                {/* 1. MASTER CONTROL: ADD OR REMOVE ALL IMAGES */}
-                <div className="p-6 bg-gradient-to-r from-[#0d2a1b] to-[#155e3c] text-white rounded-3xl shadow-md border border-[#d4af37]/40 space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                {/* 1. MASTER CONTROL & GLOBAL ACTIONS */}
+                <div className="p-6 bg-gradient-to-r from-[#0d2a1b] via-[#12422a] to-[#155e3c] text-white rounded-3xl shadow-lg border border-[#d4af37]/40 space-y-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="space-y-1">
-                      <span className="text-[11px] uppercase font-bold tracking-widest text-[#d4af37]">
-                        Master Image Switch
+                      <span className="text-[11px] uppercase font-bold tracking-widest text-[#d4af37] flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Master Image Control & Presets</span>
                       </span>
                       <h4 className="font-heading text-xl font-bold">
-                        Website Image Visibility Status:{' '}
+                        Website Image Visibility:{' '}
                         <span className={currentImageSettings.showAllImages ? 'text-[#86efac]' : 'text-amber-300'}>
-                          {currentImageSettings.showAllImages ? 'All Images Enabled' : 'All Images Removed (Minimalist)'}
+                          {currentImageSettings.showAllImages ? 'All Images Enabled' : 'All Images Removed (Minimalist Mode)'}
                         </span>
                       </h4>
                       <p className="text-xs text-emerald-100 max-w-xl">
-                        Switch between full photography mode and lightweight minimalist Islamic typography mode across the whole site.
+                        Instantly toggle between high-definition photography mode and elegant minimalist typography mode across all sections.
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex flex-wrap items-center gap-2.5 shrink-0">
                       <button
+                        type="button"
                         onClick={() => handleToggleAllImages(false)}
-                        className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                           !currentImageSettings.showAllImages
                             ? 'bg-amber-400 text-neutral-900 shadow-md ring-2 ring-white'
                             : 'bg-white/10 hover:bg-white/20 text-white'
                         }`}
+                        title="Remove all photography, activating clean typography and vector art fallbacks"
                       >
                         🚫 Remove All Images
                       </button>
 
                       <button
-                        onClick={() => handleToggleAllImages(true)}
-                        className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                          currentImageSettings.showAllImages
-                            ? 'bg-[#f5b82e] text-[#112417] shadow-md ring-2 ring-white'
-                            : 'bg-white/10 hover:bg-white/20 text-white'
-                        }`}
+                        type="button"
+                        onClick={restoreAllDefaultImages}
+                        className="px-4 py-2 bg-[#f5b82e] hover:bg-[#e0a41d] text-[#112417] text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5"
+                        title="Restore default photography across slides, services, about, and testimonials"
                       >
-                        🖼️ Restore All Images
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Restore All Defaults</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedCustom = { ...(currentImageSettings.customImages || {}) };
+                          const updatedServices = services.map((srv) => {
+                            const preset = COUPLE_PHOTO_PRESETS.find((p) => p.serviceId === srv.id);
+                            if (preset) {
+                              updatedCustom[srv.id] = preset.imageUrl;
+                              return {
+                                ...srv,
+                                imageUrl: preset.imageUrl,
+                                coupleThemeTag: preset.category,
+                                imageCaption: preset.description,
+                              };
+                            }
+                            return srv;
+                          });
+
+                          setServices(updatedServices);
+                          setSettings({
+                            ...settings,
+                            imageSettings: {
+                              ...currentImageSettings,
+                              showAllImages: true,
+                              showServiceImages: true,
+                              customImages: updatedCustom,
+                            },
+                          });
+                          showToast('All 6 relevant couple & lover photos applied successfully!');
+                        }}
+                        className="px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl border border-emerald-400/30 transition-all flex items-center gap-1.5"
+                        title="Apply curated lovers & couple photos to all services"
+                      >
+                        <Heart className="w-3.5 h-3.5 text-rose-300 fill-rose-300/40" />
+                        <span>Apply All Couple Photos</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowAddCustomSlotModal(true)}
+                        className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white text-xs font-bold rounded-xl border border-white/20 transition-all flex items-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Custom Slot</span>
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {/* 2. GRANULAR SECTION TOGGLES */}
-                <div className="p-5 border border-neutral-200 rounded-2xl bg-neutral-50/50 space-y-4">
+                {/* 2. SECTION-BY-SECTION VISIBILITY TOGGLES */}
+                <div className="p-5 border border-neutral-200 rounded-2xl bg-neutral-50/50 space-y-3">
                   <h4 className="font-bold text-sm text-neutral-900">
-                    Section-by-Section Image Toggles
+                    Granular Section Image Toggles
                   </h4>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-                    <div className="p-3.5 bg-white border border-neutral-200 rounded-xl flex items-center justify-between">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+                    <div className="p-3 bg-white border border-neutral-200 rounded-xl flex items-center justify-between">
                       <div>
-                        <p className="font-bold text-neutral-800">Hero Slider Images</p>
-                        <p className="text-[11px] text-neutral-500">Backdrop silhouettes & photos</p>
+                        <p className="font-bold text-neutral-800 text-[11px]">Hero Slider</p>
+                        <p className="text-[10px] text-neutral-500">Backdrop photos</p>
                       </div>
                       <button
                         onClick={() => handleSectionImageToggle('showHeroImages')}
-                        className={`px-3 py-1 rounded-full font-bold transition-colors ${
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-colors ${
                           currentImageSettings.showHeroImages && currentImageSettings.showAllImages
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-neutral-200 text-neutral-600'
@@ -999,14 +1501,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </button>
                     </div>
 
-                    <div className="p-3.5 bg-white border border-neutral-200 rounded-xl flex items-center justify-between">
+                    <div className="p-3 bg-white border border-neutral-200 rounded-xl flex items-center justify-between">
                       <div>
-                        <p className="font-bold text-neutral-800">Service Cards Images</p>
-                        <p className="text-[11px] text-neutral-500">Photos on all 6 service cards</p>
+                        <p className="font-bold text-neutral-800 text-[11px]">Service Cards</p>
+                        <p className="text-[10px] text-neutral-500">Couple & lover photos</p>
                       </div>
                       <button
                         onClick={() => handleSectionImageToggle('showServiceImages')}
-                        className={`px-3 py-1 rounded-full font-bold transition-colors ${
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-colors ${
                           currentImageSettings.showServiceImages && currentImageSettings.showAllImages
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-neutral-200 text-neutral-600'
@@ -1016,14 +1518,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </button>
                     </div>
 
-                    <div className="p-3.5 bg-white border border-neutral-200 rounded-xl flex items-center justify-between">
+                    <div className="p-3 bg-white border border-neutral-200 rounded-xl flex items-center justify-between">
                       <div>
-                        <p className="font-bold text-neutral-800">About Section Artwork</p>
-                        <p className="text-[11px] text-neutral-500">Holy Quran & lantern image</p>
+                        <p className="font-bold text-neutral-800 text-[11px]">About Maulana</p>
+                        <p className="text-[10px] text-neutral-500">Holy Quran lantern</p>
                       </div>
                       <button
                         onClick={() => handleSectionImageToggle('showAboutImage')}
-                        className={`px-3 py-1 rounded-full font-bold transition-colors ${
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-colors ${
                           currentImageSettings.showAboutImage && currentImageSettings.showAllImages
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-neutral-200 text-neutral-600'
@@ -1033,14 +1535,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </button>
                     </div>
 
-                    <div className="p-3.5 bg-white border border-neutral-200 rounded-xl flex items-center justify-between">
+                    <div className="p-3 bg-white border border-neutral-200 rounded-xl flex items-center justify-between">
                       <div>
-                        <p className="font-bold text-neutral-800">Why Choose Us Mosque</p>
-                        <p className="text-[11px] text-neutral-500">Right minarets silhouette</p>
+                        <p className="font-bold text-neutral-800 text-[11px]">Why Choose Us</p>
+                        <p className="text-[10px] text-neutral-500">Mosque minarets</p>
                       </div>
                       <button
                         onClick={() => handleSectionImageToggle('showWhyChooseSkyline')}
-                        className={`px-3 py-1 rounded-full font-bold transition-colors ${
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-colors ${
                           currentImageSettings.showWhyChooseSkyline && currentImageSettings.showAllImages
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-neutral-200 text-neutral-600'
@@ -1050,14 +1552,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </button>
                     </div>
 
-                    <div className="p-3.5 bg-white border border-neutral-200 rounded-xl flex items-center justify-between">
+                    <div className="p-3 bg-white border border-neutral-200 rounded-xl flex items-center justify-between">
                       <div>
-                        <p className="font-bold text-neutral-800">Testimonial Avatars</p>
-                        <p className="text-[11px] text-neutral-500">Client profile pictures</p>
+                        <p className="font-bold text-neutral-800 text-[11px]">Client Avatars</p>
+                        <p className="text-[10px] text-neutral-500">Testimonials photos</p>
                       </div>
                       <button
                         onClick={() => handleSectionImageToggle('showTestimonialAvatars')}
-                        className={`px-3 py-1 rounded-full font-bold transition-colors ${
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-colors ${
                           currentImageSettings.showTestimonialAvatars && currentImageSettings.showAllImages
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-neutral-200 text-neutral-600'
@@ -1069,152 +1571,457 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                 </div>
 
-                {/* 3. ADD OR REPLACE CUSTOM IMAGE */}
-                <div className="p-6 border border-neutral-200 rounded-3xl bg-white shadow-2xs space-y-5">
-                  <div className="flex items-center gap-2">
-                    <Upload className="w-5 h-5 text-[#155e3c]" />
-                    <h4 className="font-heading text-lg font-bold text-neutral-900">
-                      Add / Upload / Replace Images
-                    </h4>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                    <div className="lg:col-span-7 space-y-4 text-xs">
-                      <div>
-                        <label className="font-bold text-neutral-700 block mb-1">
-                          Select Section / Card to Customize
-                        </label>
-                        <select
-                          value={selectedImageTarget}
-                          onChange={(e) => setSelectedImageTarget(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-semibold"
-                        >
-                          <optgroup label="Hero Slider Slides">
-                            <option value="slide-1">Hero Slide 1: Dua & Wazifa For Love</option>
-                            <option value="slide-2">Hero Slide 2: Love Marriage Guidance</option>
-                            <option value="slide-3">Hero Slide 3: Personal Ruhani Guidance</option>
-                          </optgroup>
-                          <optgroup label="Services Cards">
-                            <option value="srv-1">Service 1: Dua For Love</option>
-                            <option value="srv-2">Service 2: Wazifa For Love</option>
-                            <option value="srv-3">Service 3: Ruhani Ilm</option>
-                            <option value="srv-4">Service 4: Taweez</option>
-                            <option value="srv-5">Service 5: Love Marriage</option>
-                            <option value="srv-6">Service 6: Relationship Problem</option>
-                          </optgroup>
-                          <optgroup label="Other Sections">
-                            <option value="about">About Maulana Shamsuddin Section</option>
-                          </optgroup>
-                        </select>
+                {/* 3. INTERACTIVE DIRECTORY OF ALL WEBSITE IMAGES (ADD, REMOVE, REPLACE) */}
+                <div className="p-6 border border-neutral-200 rounded-3xl bg-white shadow-xs space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Camera className="w-5 h-5 text-[#155e3c]" />
+                        <h4 className="font-heading text-lg font-bold text-neutral-900">
+                          All Website Images Directory
+                        </h4>
                       </div>
+                      <p className="text-xs text-neutral-500 mt-0.5">
+                        Direct visual controls to Add, Remove, or Replace any picture across all sections of the site.
+                      </p>
+                    </div>
 
-                      <div>
-                        <label className="font-bold text-neutral-700 block mb-1">
-                          Option A: Upload Image File from Device
-                        </label>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileUpload}
-                          className="w-full text-xs text-neutral-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-[#155e3c] hover:file:bg-emerald-100 cursor-pointer"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-neutral-700 block mb-1">
-                          Option B: Or Enter Image URL
-                        </label>
-                        <input
-                          type="url"
-                          value={customImageUrlInput}
-                          onChange={(e) => setCustomImageUrlInput(e.target.value)}
-                          placeholder="https://example.com/islamic-image.jpg"
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-xl text-xs font-mono"
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-3 pt-2">
+                    {/* Filter Pills */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                      {(
+                        [
+                          { key: 'all', label: 'All Images' },
+                          { key: 'services', label: 'Services (6)' },
+                          { key: 'slides', label: 'Hero Slides (3)' },
+                          { key: 'branding', label: 'About & Brand (2)' },
+                          { key: 'testimonials', label: 'Testimonials (3)' },
+                          { key: 'custom', label: 'Custom Slots' },
+                        ] as const
+                      ).map((filter) => (
                         <button
-                          onClick={handleApplyCustomImage}
-                          className="px-5 py-2.5 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-sm"
+                          key={filter.key}
+                          type="button"
+                          onClick={() => setImageDirectoryFilter(filter.key)}
+                          className={`px-3 py-1 rounded-lg font-bold transition-all text-xs ${
+                            imageDirectoryFilter === filter.key
+                              ? 'bg-[#155e3c] text-white shadow-xs'
+                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                          }`}
                         >
-                          <Check className="w-4 h-4" />
-                          <span>Apply Image</span>
+                          {filter.label}
                         </button>
-
-                        {currentImageSettings.customImages?.[selectedImageTarget] && (
-                          <button
-                            onClick={() => handleRemoveCustomImage(selectedImageTarget)}
-                            className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-xl text-xs flex items-center gap-1.5"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Remove Custom Image</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Preview Box */}
-                    <div className="lg:col-span-5">
-                      <label className="font-bold text-xs text-neutral-700 block mb-1">
-                        Live Preview
-                      </label>
-                      <div className="w-full h-48 rounded-2xl border-2 border-dashed border-neutral-300 bg-neutral-50 flex items-center justify-center overflow-hidden relative">
-                        {previewImage || customImageUrlInput ? (
-                          <img
-                            src={previewImage || customImageUrlInput}
-                            alt="Preview"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : currentImageSettings.customImages?.[selectedImageTarget] ? (
-                          <div className="w-full h-full relative">
-                            <img
-                              src={currentImageSettings.customImages[selectedImageTarget]}
-                              alt="Currently configured"
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                              Current Custom Image
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center p-4 text-neutral-400 text-xs">
-                            <ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-50" />
-                            <span>Select or upload an image to preview</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 4. ACTIVE CUSTOM IMAGES LIST */}
-                {Object.keys(currentImageSettings.customImages || {}).length > 0 && (
-                  <div className="p-5 border border-neutral-200 rounded-2xl bg-neutral-50/50 space-y-3">
-                    <h4 className="font-bold text-sm text-neutral-900">
-                      Currently Configured Custom Images
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {Object.entries(currentImageSettings.customImages).map(([key, url]) => (
-                        <div key={key} className="bg-white p-2 rounded-xl border border-neutral-200 space-y-2">
-                          <div className="w-full h-24 rounded-lg overflow-hidden bg-neutral-100">
-                            <img src={url} alt={key} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="font-bold text-neutral-700 truncate max-w-[100px]">{key}</span>
-                            <button
-                              onClick={() => handleRemoveCustomImage(key)}
-                              className="text-red-600 hover:text-red-800 p-1"
-                              title="Delete this image"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
                       ))}
                     </div>
                   </div>
-                )}
+
+                  {/* Cards Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {(
+                      [
+                        ...slides.map((s, idx) => ({
+                          id: s.id,
+                          title: `Hero Slide ${idx + 1}: ${s.heading}`,
+                          category: 'slides' as const,
+                          categoryLabel: 'Hero Slider',
+                          currentUrl: s.imageUrl || currentImageSettings.customImages?.[s.id],
+                          defaultFallback: 'Islamic Silk Silhouette & Stars',
+                          themeTag: s.themeStyle,
+                          caption: s.subheading,
+                        })),
+                        ...services.map((s) => ({
+                          id: s.id,
+                          title: `${s.title}`,
+                          category: 'services' as const,
+                          categoryLabel: 'Spiritual Services',
+                          currentUrl: s.imageUrl || currentImageSettings.customImages?.[s.id],
+                          defaultFallback: 'Islamic Calligraphy Vector Art',
+                          themeTag: s.coupleThemeTag || 'Couple Guidance',
+                          caption: s.imageCaption || s.shortDescription,
+                        })),
+                        {
+                          id: 'about',
+                          title: 'About Maulana Shamsuddin',
+                          category: 'branding' as const,
+                          categoryLabel: 'About Section',
+                          currentUrl:
+                            currentImageSettings.aboutCustomImage ||
+                            currentImageSettings.customImages?.['about'],
+                          defaultFallback: 'Holy Quran & Golden Lantern Art',
+                          themeTag: 'Spiritual Guide',
+                          caption: 'Atmospheric Quranic illumination and lantern',
+                        },
+                        {
+                          id: 'logo',
+                          title: 'Header Website Logo',
+                          category: 'branding' as const,
+                          categoryLabel: 'Header Crest',
+                          currentUrl: settings.logoUrl || currentImageSettings.customImages?.['logo'],
+                          defaultFallback: 'Mosque Minaret Emblem Crest',
+                          themeTag: 'Site Identity',
+                          caption: 'Official brand crest',
+                        },
+                        ...testimonials.map((t) => ({
+                          id: t.id,
+                          title: `${t.name} (${t.serviceCategory})`,
+                          category: 'testimonials' as const,
+                          categoryLabel: 'Client Testimonial',
+                          currentUrl: t.avatarUrl || currentImageSettings.customImages?.[t.id],
+                          defaultFallback: `${t.avatarType} Silhouette Monogram`,
+                          themeTag: t.serviceCategory,
+                          caption: `Client rating ${t.rating}★`,
+                        })),
+                        ...Object.entries(currentImageSettings.customImages || {})
+                          .filter(
+                            ([key]) =>
+                              ![
+                                'slide-1',
+                                'slide-2',
+                                'slide-3',
+                                'srv-1',
+                                'srv-2',
+                                'srv-3',
+                                'srv-4',
+                                'srv-5',
+                                'srv-6',
+                                'about',
+                                'logo',
+                                'test-1',
+                                'test-2',
+                                'test-3',
+                              ].includes(key)
+                          )
+                          .map(([key, url]) => ({
+                            id: key,
+                            title: `Custom Slot: ${key}`,
+                            category: 'custom' as const,
+                            categoryLabel: 'Custom Image Slot',
+                            currentUrl: url,
+                            defaultFallback: 'Custom Placeholder',
+                            themeTag: 'Custom Upload',
+                            caption: 'User configured visual asset',
+                          })),
+                      ] as const
+                    )
+                      .filter((slot) => {
+                        if (imageDirectoryFilter === 'all') return true;
+                        return slot.category === imageDirectoryFilter;
+                      })
+                      .map((slot) => {
+                        const hasActiveImage = Boolean(slot.currentUrl);
+
+                        return (
+                          <div
+                            key={slot.id}
+                            className={`rounded-2xl border p-4 flex flex-col justify-between transition-all ${
+                              hasActiveImage
+                                ? 'bg-white border-neutral-200 hover:border-emerald-300 hover:shadow-md'
+                                : 'bg-neutral-50/70 border-dashed border-neutral-300'
+                            }`}
+                          >
+                            <div className="space-y-3">
+                              {/* Header info */}
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-emerald-50 text-[#155e3c] border border-emerald-200/60">
+                                  {slot.categoryLabel}
+                                </span>
+                                {hasActiveImage ? (
+                                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <Check className="w-3 h-3" />
+                                    <span>Active</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-medium text-neutral-500 bg-neutral-200/70 px-2 py-0.5 rounded-full">
+                                    Default Artwork
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Thumbnail preview */}
+                              <div className="w-full h-36 rounded-xl overflow-hidden bg-neutral-900 border border-neutral-200 relative group">
+                                {hasActiveImage ? (
+                                  <>
+                                    <img
+                                      src={slot.currentUrl}
+                                      alt={slot.title}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                      }}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                                    {slot.themeTag && (
+                                      <span className="absolute bottom-2 left-2 text-[10px] font-bold text-white bg-black/60 px-2 py-0.5 rounded backdrop-blur-xs">
+                                        {slot.themeTag}
+                                      </span>
+                                    )}
+                                  </>
+                                ) : (
+                                  <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-gradient-to-br from-emerald-950 via-neutral-900 to-[#0a180f] text-neutral-300 space-y-1">
+                                    <ImageIcon className="w-6 h-6 text-emerald-400/60" />
+                                    <span className="text-[11px] font-semibold text-emerald-100">
+                                      {slot.defaultFallback}
+                                    </span>
+                                    <span className="text-[10px] text-neutral-400">
+                                      No custom photo uploaded
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Title & Caption */}
+                              <div className="space-y-1">
+                                <h5 className="font-heading text-sm font-bold text-neutral-900 line-clamp-1">
+                                  {slot.title}
+                                </h5>
+                                <p className="text-[11px] text-neutral-500 line-clamp-2 leading-snug">
+                                  {slot.caption}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Action Buttons: ADD, REPLACE, REMOVE */}
+                            <div className="pt-4 border-t border-neutral-100 grid grid-cols-3 gap-2 text-xs">
+                              {/* 1. Add / Upload */}
+                              <label className="cursor-pointer flex items-center justify-center gap-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-[#155e3c] font-bold rounded-lg border border-emerald-200 transition-colors text-[11px]">
+                                <Upload className="w-3 h-3 shrink-0" />
+                                <span>Add</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const reader = new FileReader();
+                                    reader.onload = (ev) => {
+                                      applyImageToSlot(
+                                        slot.id,
+                                        ev.target?.result as string,
+                                        slot.themeTag,
+                                        slot.caption
+                                      );
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }}
+                                />
+                              </label>
+
+                              {/* 2. Replace */}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setReplaceModalSlot({
+                                    id: slot.id,
+                                    title: slot.title,
+                                    category: slot.categoryLabel,
+                                    currentUrl: slot.currentUrl,
+                                    coupleThemeTag: slot.themeTag,
+                                    imageCaption: slot.caption,
+                                  })
+                                }
+                                className="flex items-center justify-center gap-1 py-1.5 px-2 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded-lg shadow-2xs transition-colors text-[11px]"
+                              >
+                                <RefreshCw className="w-3 h-3 shrink-0" />
+                                <span>Replace</span>
+                              </button>
+
+                              {/* 3. Remove */}
+                              <button
+                                type="button"
+                                onClick={() => removeImageFromSlot(slot.id)}
+                                disabled={!hasActiveImage}
+                                className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg font-bold transition-colors text-[11px] ${
+                                  hasActiveImage
+                                    ? 'bg-red-50 hover:bg-red-100 text-red-700'
+                                    : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
+                                }`}
+                                title={hasActiveImage ? 'Remove image' : 'No image to remove'}
+                              >
+                                <Trash2 className="w-3 h-3 shrink-0" />
+                                <span>Remove</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                {/* 4. CURATED COUPLE & LOVER PHOTOS LIBRARY */}
+                <div className="p-6 border border-emerald-200 rounded-3xl bg-gradient-to-b from-emerald-50/70 to-white shadow-sm space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Heart className="w-5 h-5 text-rose-500 fill-rose-500/20" />
+                        <h4 className="font-heading text-xl font-bold text-neutral-900">
+                          Curated Couple & Lover Photos Library
+                        </h4>
+                      </div>
+                      <p className="text-xs text-neutral-600 mt-1 max-w-xl">
+                        High-quality authentic couple visuals tailored for Islamic relationship guidance: Dua For Love, Wazifa, Marriage, and Reconciliation.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updatedCustom = { ...(currentImageSettings.customImages || {}) };
+                        const updatedServices = services.map((srv) => {
+                          const preset = COUPLE_PHOTO_PRESETS.find((p) => p.serviceId === srv.id);
+                          if (preset) {
+                            updatedCustom[srv.id] = preset.imageUrl;
+                            return {
+                              ...srv,
+                              imageUrl: preset.imageUrl,
+                              coupleThemeTag: preset.category,
+                              imageCaption: preset.description,
+                            };
+                          }
+                          return srv;
+                        });
+
+                        setServices(updatedServices);
+                        setSettings({
+                          ...settings,
+                          imageSettings: {
+                            ...currentImageSettings,
+                            showAllImages: true,
+                            showServiceImages: true,
+                            customImages: updatedCustom,
+                          },
+                        });
+                        showToast('All 6 relevant couple & lover photos applied successfully!');
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#155e3c] hover:bg-[#0f442b] text-white text-xs font-bold rounded-xl shadow-sm transition-all shrink-0 cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4 text-[#fde047]" />
+                      <span>Apply All 6 Curated Couple Photos</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {COUPLE_PHOTO_PRESETS.map((preset) => {
+                      const matchedService = services.find((s) => s.id === preset.serviceId);
+                      const isCurrentlyActive =
+                        currentImageSettings.customImages?.[preset.serviceId] === preset.imageUrl ||
+                        matchedService?.imageUrl === preset.imageUrl;
+
+                      return (
+                        <div
+                          key={preset.id}
+                          className={`bg-white rounded-2xl border transition-all overflow-hidden flex flex-col justify-between ${
+                            isCurrentlyActive
+                              ? 'border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
+                              : 'border-neutral-200/90 hover:border-emerald-300 hover:shadow-md'
+                          }`}
+                        >
+                          <div className="relative h-36 overflow-hidden bg-neutral-900 group">
+                            <img
+                              src={preset.imageUrl}
+                              alt={preset.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
+                            <span className="absolute top-2 left-2 text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-black/60 text-[#fde047] backdrop-blur-xs border border-[#d4af37]/40">
+                              {preset.category}
+                            </span>
+                            {isCurrentlyActive && (
+                              <span className="absolute top-2 right-2 text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs">
+                                ✓ In Use
+                              </span>
+                            )}
+                            <div className="absolute bottom-2 left-2 right-2 text-white">
+                              <p className="text-[11px] font-bold drop-shadow-xs truncate">
+                                {matchedService?.title || preset.title}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 flex flex-col flex-grow justify-between space-y-3">
+                            <div className="space-y-1">
+                              <h5 className="font-heading text-xs font-bold text-neutral-800 line-clamp-1">
+                                {preset.title}
+                              </h5>
+                              <p className="text-[11px] text-neutral-500 leading-snug line-clamp-2">
+                                {preset.description}
+                              </p>
+                            </div>
+
+                            <div className="pt-1 flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  applyImageToSlot(
+                                    preset.serviceId,
+                                    preset.imageUrl,
+                                    preset.category,
+                                    preset.description
+                                  );
+                                }}
+                                className={`w-full py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                  isCurrentlyActive
+                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                    : 'bg-[#155e3c] hover:bg-[#0f442b] text-white shadow-2xs'
+                                }`}
+                              >
+                                {isCurrentlyActive ? '✓ Currently Active' : 'Apply to Service'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 5. SPIRITUAL & ISLAMIC PRESETS GALLERY */}
+                <div className="p-6 border border-neutral-200 rounded-3xl bg-neutral-50/50 shadow-xs space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-[#d4af37]" />
+                    <h4 className="font-heading text-lg font-bold text-neutral-900">
+                      Spiritual & Islamic Artwork Presets
+                    </h4>
+                  </div>
+                  <p className="text-xs text-neutral-500">
+                    Use these peaceful images for your About section, Slide backgrounds, or custom cards.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {SPIRITUAL_PHOTO_PRESETS.map((sp) => (
+                      <div
+                        key={sp.id}
+                        className="bg-white rounded-2xl border border-neutral-200 overflow-hidden flex flex-col justify-between"
+                      >
+                        <div className="relative h-32 overflow-hidden bg-neutral-900">
+                          <img src={sp.imageUrl} alt={sp.title} className="w-full h-full object-cover" />
+                          <span className="absolute top-2 left-2 text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-black/60 text-[#fde047]">
+                            {sp.category}
+                          </span>
+                        </div>
+                        <div className="p-3 space-y-2">
+                          <h6 className="font-bold text-xs text-neutral-800 line-clamp-1">{sp.title}</h6>
+                          <p className="text-[10px] text-neutral-500 line-clamp-2">{sp.description}</p>
+                          <div className="flex items-center gap-1.5 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => applyImageToSlot('about', sp.imageUrl)}
+                              className="flex-1 py-1 px-2 rounded text-[10px] font-bold bg-emerald-50 hover:bg-emerald-100 text-[#155e3c] border border-emerald-200"
+                            >
+                              Set as About
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => applyImageToSlot('slide-3', sp.imageUrl)}
+                              className="flex-1 py-1 px-2 rounded text-[10px] font-bold bg-[#155e3c] hover:bg-[#0f442b] text-white"
+                            >
+                              Set as Slide 3
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1493,6 +2300,84 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                           />
                         </div>
+
+                        {/* Testimonial Avatar Photo Controls */}
+                        <div className="md:col-span-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full overflow-hidden bg-neutral-200 border border-neutral-300 shrink-0">
+                              {t.avatarUrl ? (
+                                <img src={t.avatarUrl} alt={t.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center font-bold text-xs bg-emerald-800 text-white">
+                                  {t.name.slice(0, 2).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="space-y-0.5">
+                              <span className="font-bold text-xs text-neutral-800 block">Client Profile Picture / Avatar</span>
+                              <input
+                                type="url"
+                                value={t.avatarUrl || ''}
+                                placeholder="Avatar photo URL or upload..."
+                                onChange={(e) => {
+                                  const updated = testimonials.map((item) =>
+                                    item.id === t.id ? { ...item, avatarUrl: e.target.value } : item
+                                  );
+                                  setTestimonials(updated);
+                                }}
+                                className="w-60 sm:w-72 px-2 py-1 text-xs bg-white border border-neutral-300 rounded font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-[#155e3c] font-bold rounded-lg text-xs border border-emerald-200">
+                              <Upload className="w-3 h-3" />
+                              <span>Upload</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    applyImageToSlot(t.id, ev.target?.result as string);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }}
+                              />
+                            </label>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setReplaceModalSlot({
+                                  id: t.id,
+                                  title: `${t.name} (${t.serviceCategory})`,
+                                  category: 'Client Testimonial',
+                                  currentUrl: t.avatarUrl,
+                                })
+                              }
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded-lg text-xs"
+                            >
+                              <RefreshCw className="w-3 h-3" />
+                              <span>Replace</span>
+                            </button>
+
+                            {t.avatarUrl && (
+                              <button
+                                type="button"
+                                onClick={() => removeImageFromSlot(t.id)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-lg text-xs"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>Remove</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1637,6 +2522,83 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
                       className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
                     />
+                  </div>
+
+                  {/* Brand Logo Controls */}
+                  <div className="p-3.5 bg-neutral-50/70 border border-neutral-200 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-neutral-800 text-xs flex items-center gap-1.5">
+                        <ImageIcon className="w-3.5 h-3.5 text-[#155e3c]" />
+                        <span>Header Brand Logo</span>
+                      </label>
+                      {settings.logoUrl ? (
+                        <span className="text-[10px] text-emerald-800 bg-emerald-100 font-semibold px-2 py-0.5 rounded-full">
+                          Custom Logo
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-neutral-500 bg-neutral-200 px-2 py-0.5 rounded-full">
+                          Mosque Crest
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-lg border border-neutral-200 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                        {settings.logoUrl ? (
+                          <img src={settings.logoUrl} alt={settings.siteName} className="w-full h-full object-contain" />
+                        ) : (
+                          <span className="text-xl">🕌</span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-[#155e3c] font-bold rounded text-[11px] border border-emerald-200">
+                          <Upload className="w-2.5 h-2.5" />
+                          <span>Upload</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = (ev) => {
+                                applyImageToSlot('logo', ev.target?.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setReplaceModalSlot({
+                              id: 'logo',
+                              title: 'Header Brand Logo',
+                              category: 'Branding',
+                              currentUrl: settings.logoUrl,
+                            })
+                          }
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded text-[11px]"
+                        >
+                          <RefreshCw className="w-2.5 h-2.5" />
+                          <span>Replace</span>
+                        </button>
+
+                        {settings.logoUrl && (
+                          <button
+                            type="button"
+                            onClick={() => removeImageFromSlot('logo')}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded text-[11px]"
+                          >
+                            <Trash2 className="w-2.5 h-2.5" />
+                            <span>Remove</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -1847,6 +2809,511 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </main>
         </div>
       </div>
+
+      {/* UNIVERSAL REPLACE IMAGE MODAL */}
+      {replaceModalSlot && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-neutral-200 animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-[#0d2a1b] to-[#155e3c] text-white p-5 flex items-center justify-between shrink-0">
+              <div className="space-y-0.5">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#d4af37]">
+                  Replace Image
+                </span>
+                <h3 className="font-heading text-lg font-bold">
+                  {replaceModalSlot.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setReplaceModalSlot(null);
+                  setReplaceUploadUrl('');
+                  setReplaceCustomTag('');
+                  setReplaceCustomCaption('');
+                }}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Current vs Replacement Indicator */}
+            <div className="bg-neutral-50 p-3.5 border-b border-neutral-200 flex items-center justify-between text-xs shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="text-neutral-500 font-medium">Currently in slot:</span>
+                <div className="w-12 h-9 rounded-md bg-neutral-900 overflow-hidden border border-neutral-300 shrink-0">
+                  {replaceModalSlot.currentUrl ? (
+                    <img
+                      src={replaceModalSlot.currentUrl}
+                      alt="Current"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[9px] text-neutral-400">
+                      Fallback
+                    </div>
+                  )}
+                </div>
+                <span className="font-semibold text-neutral-700 truncate max-w-[200px]">
+                  {replaceModalSlot.currentUrl ? 'Custom Image Active' : 'Default Artwork Active'}
+                </span>
+              </div>
+
+              {replaceModalSlot.currentUrl && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    removeImageFromSlot(replaceModalSlot.id);
+                    setReplaceModalSlot(null);
+                  }}
+                  className="px-2.5 py-1 text-red-600 hover:bg-red-50 rounded-lg font-bold text-[11px] flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Clear & Revert to Fallback</span>
+                </button>
+              )}
+            </div>
+
+            {/* Replacement Selection Tabs */}
+            <div className="flex border-b border-neutral-200 bg-white px-4 shrink-0 overflow-x-auto text-xs">
+              <button
+                type="button"
+                onClick={() => setReplaceModalTab('couple')}
+                className={`py-3 px-3 font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${
+                  replaceModalTab === 'couple'
+                    ? 'border-[#155e3c] text-[#155e3c]'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                <Heart className="w-3.5 h-3.5 text-rose-500" />
+                <span>Couple & Lovers ({COUPLE_PHOTO_PRESETS.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setReplaceModalTab('spiritual')}
+                className={`py-3 px-3 font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${
+                  replaceModalTab === 'spiritual'
+                    ? 'border-[#155e3c] text-[#155e3c]'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
+                <span>Spiritual / Islamic ({SPIRITUAL_PHOTO_PRESETS.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setReplaceModalTab('avatars')}
+                className={`py-3 px-3 font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${
+                  replaceModalTab === 'avatars'
+                    ? 'border-[#155e3c] text-[#155e3c]'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                <Star className="w-3.5 h-3.5 text-amber-500" />
+                <span>Client Avatars ({CLIENT_AVATAR_PRESETS.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setReplaceModalTab('upload')}
+                className={`py-3 px-3 font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${
+                  replaceModalTab === 'upload'
+                    ? 'border-[#155e3c] text-[#155e3c]'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Upload File</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setReplaceModalTab('url')}
+                className={`py-3 px-3 font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${
+                  replaceModalTab === 'url'
+                    ? 'border-[#155e3c] text-[#155e3c]'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Web URL</span>
+              </button>
+            </div>
+
+            {/* Modal Body according to Tab */}
+            <div className="p-5 overflow-y-auto flex-1 space-y-4">
+              {/* Tab 1: Couple & Lovers Presets */}
+              {replaceModalTab === 'couple' && (
+                <div className="space-y-3">
+                  <p className="text-xs text-neutral-500">
+                    Select any authentic couple & lover photo to immediately replace this slot:
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {COUPLE_PHOTO_PRESETS.map((preset) => (
+                      <div
+                        key={preset.id}
+                        onClick={() => {
+                          applyImageToSlot(
+                            replaceModalSlot.id,
+                            preset.imageUrl,
+                            preset.category,
+                            preset.description
+                          );
+                          setReplaceModalSlot(null);
+                        }}
+                        className="group cursor-pointer rounded-xl border border-neutral-200 hover:border-emerald-500 hover:shadow-md transition-all overflow-hidden bg-white flex flex-col justify-between"
+                      >
+                        <div className="relative h-28 overflow-hidden bg-neutral-900">
+                          <img
+                            src={preset.imageUrl}
+                            alt={preset.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                          <span className="absolute top-1.5 left-1.5 text-[8px] uppercase font-bold px-1.5 py-0.5 rounded bg-black/60 text-[#fde047]">
+                            {preset.category}
+                          </span>
+                        </div>
+                        <div className="p-2 space-y-1">
+                          <h6 className="font-bold text-[11px] text-neutral-800 line-clamp-1">
+                            {preset.title}
+                          </h6>
+                          <button
+                            type="button"
+                            className="w-full py-1 text-[10px] font-bold rounded bg-emerald-50 text-[#155e3c] group-hover:bg-[#155e3c] group-hover:text-white transition-colors"
+                          >
+                            Select This Photo
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 2: Spiritual & Islamic Presets */}
+              {replaceModalTab === 'spiritual' && (
+                <div className="space-y-3">
+                  <p className="text-xs text-neutral-500">
+                    Sacred Islamic photography, Quranic lanterns, and architectural backdrops:
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {SPIRITUAL_PHOTO_PRESETS.map((sp) => (
+                      <div
+                        key={sp.id}
+                        onClick={() => {
+                          applyImageToSlot(
+                            replaceModalSlot.id,
+                            sp.imageUrl,
+                            sp.category,
+                            sp.description
+                          );
+                          setReplaceModalSlot(null);
+                        }}
+                        className="group cursor-pointer rounded-xl border border-neutral-200 hover:border-emerald-500 hover:shadow-md transition-all overflow-hidden bg-white flex flex-col justify-between"
+                      >
+                        <div className="relative h-28 overflow-hidden bg-neutral-900">
+                          <img
+                            src={sp.imageUrl}
+                            alt={sp.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                          <span className="absolute top-1.5 left-1.5 text-[8px] uppercase font-bold px-1.5 py-0.5 rounded bg-black/60 text-[#fde047]">
+                            {sp.category}
+                          </span>
+                        </div>
+                        <div className="p-2 space-y-1">
+                          <h6 className="font-bold text-[11px] text-neutral-800 line-clamp-1">
+                            {sp.title}
+                          </h6>
+                          <button
+                            type="button"
+                            className="w-full py-1 text-[10px] font-bold rounded bg-emerald-50 text-[#155e3c] group-hover:bg-[#155e3c] group-hover:text-white transition-colors"
+                          >
+                            Select This
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 3: Client Avatars Presets */}
+              {replaceModalTab === 'avatars' && (
+                <div className="space-y-3">
+                  <p className="text-xs text-neutral-500">
+                    High quality customer profile pictures:
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    {CLIENT_AVATAR_PRESETS.map((av) => (
+                      <div
+                        key={av.id}
+                        onClick={() => {
+                          applyImageToSlot(replaceModalSlot.id, av.imageUrl);
+                          setReplaceModalSlot(null);
+                        }}
+                        className="group cursor-pointer rounded-xl border border-neutral-200 hover:border-emerald-500 p-2.5 text-center space-y-2 bg-white hover:shadow-md transition-all flex flex-col items-center"
+                      >
+                        <div className="w-16 h-16 rounded-full overflow-hidden border border-neutral-200">
+                          <img
+                            src={av.imageUrl}
+                            alt={av.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                          />
+                        </div>
+                        <span className="text-[11px] font-bold text-neutral-800 line-clamp-1">
+                          {av.name}
+                        </span>
+                        <button
+                          type="button"
+                          className="w-full py-0.5 text-[9px] font-bold rounded bg-emerald-50 text-[#155e3c] group-hover:bg-[#155e3c] group-hover:text-white"
+                        >
+                          Use Avatar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 4: Upload from Device */}
+              {replaceModalTab === 'upload' && (
+                <div className="space-y-4">
+                  <div className="border-2 border-dashed border-neutral-300 rounded-2xl p-6 text-center hover:border-emerald-500 transition-colors bg-neutral-50/50">
+                    <Upload className="w-8 h-8 text-[#155e3c] mx-auto mb-2" />
+                    <h5 className="font-bold text-sm text-neutral-800">
+                      Choose an image file from your device
+                    </h5>
+                    <p className="text-xs text-neutral-500 mt-1 mb-3">
+                      Supports JPG, PNG, WEBP, and GIF
+                    </p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          setReplaceUploadUrl(ev.target?.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                      className="text-xs text-neutral-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#155e3c] file:text-white hover:file:bg-[#0f442b] cursor-pointer"
+                    />
+                  </div>
+
+                  {replaceUploadUrl && (
+                    <div className="p-3 bg-white border border-neutral-200 rounded-xl space-y-2">
+                      <span className="text-xs font-bold text-neutral-700 block">Preview:</span>
+                      <div className="w-full h-44 rounded-lg overflow-hidden bg-neutral-900">
+                        <img src={replaceUploadUrl} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tab 5: Web URL */}
+              {replaceModalTab === 'url' && (
+                <div className="space-y-4 text-xs">
+                  <div>
+                    <label className="font-bold text-neutral-700 block mb-1">
+                      Direct Web Image Address (URL)
+                    </label>
+                    <input
+                      type="url"
+                      value={replaceUploadUrl}
+                      onChange={(e) => setReplaceUploadUrl(e.target.value)}
+                      placeholder="https://images.unsplash.com/photo-..."
+                      className="w-full px-3 py-2 bg-white border border-neutral-300 rounded-xl font-mono text-xs"
+                    />
+                  </div>
+
+                  {replaceUploadUrl && (
+                    <div className="p-3 bg-white border border-neutral-200 rounded-xl space-y-2">
+                      <span className="text-xs font-bold text-neutral-700 block">Preview:</span>
+                      <div className="w-full h-44 rounded-lg overflow-hidden bg-neutral-900">
+                        <img src={replaceUploadUrl} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Optional Service Tag & Caption when applicable */}
+              {replaceModalSlot.id.startsWith('srv-') && (
+                <div className="pt-3 border-t border-neutral-200 grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="font-bold text-neutral-700 block mb-1">
+                      Theme Badge Tag (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={replaceCustomTag || replaceModalSlot.coupleThemeTag || ''}
+                      onChange={(e) => setReplaceCustomTag(e.target.value)}
+                      placeholder="e.g. Dua For Lovers"
+                      className="w-full px-2.5 py-1.5 border border-neutral-300 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-neutral-700 block mb-1">
+                      Photo Caption (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={replaceCustomCaption || replaceModalSlot.imageCaption || ''}
+                      onChange={(e) => setReplaceCustomCaption(e.target.value)}
+                      placeholder="e.g. Loving couple praying..."
+                      className="w-full px-2.5 py-1.5 border border-neutral-300 rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-neutral-50 px-5 py-3.5 border-t border-neutral-200 flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setReplaceModalSlot(null);
+                  setReplaceUploadUrl('');
+                }}
+                className="px-4 py-2 text-xs font-bold text-neutral-600 hover:text-neutral-900"
+              >
+                Cancel
+              </button>
+
+              {(replaceModalTab === 'upload' || replaceModalTab === 'url') && (
+                <button
+                  type="button"
+                  disabled={!replaceUploadUrl.trim()}
+                  onClick={() => {
+                    if (replaceUploadUrl.trim()) {
+                      applyImageToSlot(
+                        replaceModalSlot.id,
+                        replaceUploadUrl.trim(),
+                        replaceCustomTag || replaceModalSlot.coupleThemeTag,
+                        replaceCustomCaption || replaceModalSlot.imageCaption
+                      );
+                      setReplaceModalSlot(null);
+                      setReplaceUploadUrl('');
+                    }
+                  }}
+                  className={`px-5 py-2 text-xs font-bold rounded-xl flex items-center gap-2 ${
+                    replaceUploadUrl.trim()
+                      ? 'bg-[#155e3c] hover:bg-[#0f442b] text-white shadow-md'
+                      : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                  }`}
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Confirm & Replace Image</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD CUSTOM IMAGE SLOT MODAL */}
+      {showAddCustomSlotModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-neutral-200 animate-in zoom-in-95 duration-200">
+            <div className="bg-gradient-to-r from-[#0d2a1b] to-[#155e3c] text-white p-5 flex items-center justify-between">
+              <h3 className="font-heading text-lg font-bold">Add New Custom Image Slot</h3>
+              <button
+                type="button"
+                onClick={() => setShowAddCustomSlotModal(false)}
+                className="text-white/80 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 text-xs">
+              <div>
+                <label className="font-bold text-neutral-700 block mb-1">
+                  Custom Slot Identifier / Name
+                </label>
+                <input
+                  type="text"
+                  value={newCustomSlotKey}
+                  onChange={(e) => setNewCustomSlotKey(e.target.value.toLowerCase().replace(/\s+/g, '_'))}
+                  placeholder="e.g. banner_promo, special_dua, mosque_view"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl font-mono text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-neutral-700 block mb-1">
+                  Image File or URL
+                </label>
+                <input
+                  type="url"
+                  value={newCustomSlotUrl}
+                  onChange={(e) => setNewCustomSlotUrl(e.target.value)}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-xl font-mono text-xs mb-2"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      setNewCustomSlotUrl(ev.target?.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                  className="w-full text-xs text-neutral-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-[#155e3c]"
+                />
+              </div>
+
+              {newCustomSlotUrl && (
+                <div className="w-full h-32 rounded-xl overflow-hidden bg-neutral-900 border border-neutral-200">
+                  <img src={newCustomSlotUrl} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              )}
+            </div>
+
+            <div className="bg-neutral-50 px-5 py-3 border-t border-neutral-200 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAddCustomSlotModal(false)}
+                className="px-4 py-2 text-xs font-bold text-neutral-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!newCustomSlotKey.trim() || !newCustomSlotUrl.trim()}
+                onClick={() => {
+                  if (newCustomSlotKey.trim() && newCustomSlotUrl.trim()) {
+                    applyImageToSlot(newCustomSlotKey.trim(), newCustomSlotUrl.trim());
+                    setShowAddCustomSlotModal(false);
+                    setNewCustomSlotKey('');
+                    setNewCustomSlotUrl('');
+                  }
+                }}
+                className={`px-4 py-2 text-xs font-bold rounded-xl ${
+                  newCustomSlotKey.trim() && newCustomSlotUrl.trim()
+                    ? 'bg-[#155e3c] text-white hover:bg-[#0f442b]'
+                    : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                }`}
+              >
+                Add Image Slot
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+

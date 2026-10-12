@@ -24,7 +24,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
         <div className="bg-[#155e3c] text-white p-6 sm:p-7 relative">
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors"
+            className="absolute top-5 right-5 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors cursor-pointer z-10"
           >
             <X className="w-5 h-5" />
           </button>
@@ -38,6 +38,31 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
             {service.shortDescription}
           </p>
         </div>
+
+        {/* Relevant Couple / Lover Photo Banner */}
+        {service.imageUrl && (
+          <div className="relative w-full h-48 sm:h-56 overflow-hidden bg-neutral-950 shrink-0">
+            <img
+              src={service.imageUrl}
+              alt={service.imageCaption || service.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+            <div className="absolute bottom-3 left-5 right-5 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-[#fde047] border border-[#d4af37]/40 shadow-xs inline-flex items-center gap-1">
+                  <Heart className="w-3 h-3 text-rose-400 fill-rose-400/40" />
+                  <span>{service.coupleThemeTag || 'Roohani Couple Guidance'}</span>
+                </span>
+                {service.imageCaption && (
+                  <p className="text-xs text-white/95 mt-1 font-medium drop-shadow-xs italic">
+                    ✦ {service.imageCaption}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Content Body */}
         <div className="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto">

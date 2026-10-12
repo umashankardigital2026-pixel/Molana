@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, Sparkles, Heart } from 'lucide-react';
 import { ServiceItem, ImageSettings } from '../types';
 import {
   IslamicDivider,
@@ -17,31 +17,19 @@ interface ServicesSectionProps {
   onSelectService: (service: ServiceItem) => void;
 }
 
-export const ServicesSection: React.FC<ServicesSectionProps> = ({
-  services,
-  imageSettings,
-  onSelectService,
-}) => {
-  const activeServices = services.filter((s) => s.isActive).sort((a, b) => a.displayOrder - b.displayOrder);
+const ServiceCardArtwork: React.FC<{
+  service: ServiceItem;
+  imageSettings?: ImageSettings;
+}> = ({ service, imageSettings }) => {
+  const [hasError, setHasError] = useState(false);
 
   const showImages =
     imageSettings === undefined ||
     (imageSettings.showAllImages && imageSettings.showServiceImages);
 
-  const renderServiceArtwork = (service: ServiceItem) => {
-    const customImg = imageSettings?.customImages?.[service.id];
-    if (customImg) {
-      return (
-        <div className="w-full h-44 relative overflow-hidden bg-neutral-900">
-          <img
-            src={customImg}
-            alt={service.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        </div>
-      );
-    }
+  const customImg = imageSettings?.customImages?.[service.id] || service.imageUrl;
 
+  const renderSvgFallback = () => {
     switch (service.iconType) {
       case 'dua':
         return <ServiceCoupleImage />;
@@ -60,6 +48,59 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
     }
   };
 
+  if (showImages && customImg && !hasError) {
+    return (
+      <div className="w-full h-48 relative overflow-hidden bg-neutral-900 group">
+        <img
+          src={customImg}
+          alt={service.imageCaption || service.title}
+          onError={() => setHasError(true)}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          loading="lazy"
+        />
+        {/* Soft atmospheric gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
+
+        {/* Relevancy Tag / Couple Theme Badge */}
+        <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between pointer-events-none">
+          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-[#fde047] border border-[#d4af37]/50 shadow-sm flex items-center gap-1">
+            <Heart className="w-3 h-3 text-rose-400 fill-rose-400/40 inline" />
+            <span>{service.coupleThemeTag || 'Couple Guidance'}</span>
+          </span>
+          <span className="text-[10px] text-emerald-100 bg-[#155e3c]/85 backdrop-blur-xs px-2.5 py-0.5 rounded-full font-semibold border border-emerald-500/30 shadow-sm">
+            Sharai Amal
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      {renderSvgFallback()}
+      {service.coupleThemeTag && (
+        <div className="absolute bottom-2.5 left-3 pointer-events-none">
+          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-xs text-[#fde047] border border-[#d4af37]/50 shadow-sm flex items-center gap-1">
+            <Heart className="w-3 h-3 text-rose-400 fill-rose-400/40 inline" />
+            <span>{service.coupleThemeTag}</span>
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const ServicesSection: React.FC<ServicesSectionProps> = ({
+  services,
+  imageSettings,
+  onSelectService,
+}) => {
+  const activeServices = services.filter((s) => s.isActive).sort((a, b) => a.displayOrder - b.displayOrder);
+
+  const showImages =
+    imageSettings === undefined ||
+    (imageSettings.showAllImages && imageSettings.showServiceImages);
+
   return (
     <section id="services" className="py-16 sm:py-24 bg-white relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -73,7 +114,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
           </h2>
 
           <p className="text-sm sm:text-base text-neutral-600 font-medium">
-            Har mushkil ka hal, har dua ka asar – Maulana Shamsuddin ke roohani amal ke saath.
+            Har mushkil ka hal, har dua ka asar – Maulana Shamsuddin ke roohani amal aur couple rehnumai ke saath.
           </p>
         </div>
 
@@ -87,15 +128,15 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
               {/* Card Artwork / Image Container or Clean Banner */}
               {showImages ? (
                 <div className="relative overflow-hidden">
-                  {renderServiceArtwork(service)}
-                  <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
+                  <ServiceCardArtwork service={service} imageSettings={imageSettings} />
+                  <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors pointer-events-none" />
                 </div>
               ) : (
                 <div className="py-5 px-6 bg-gradient-to-r from-[#0d2a1b] to-[#155e3c] text-white flex items-center justify-between border-b border-[#d4af37]/30">
                   <div className="flex items-center gap-2">
                     <span className="text-[#fde047]">✦</span>
                     <span className="text-xs uppercase font-bold tracking-wider text-[#d4af37]">
-                      Sharai Amal
+                      {service.coupleThemeTag || 'Sharai Amal'}
                     </span>
                   </div>
                   <Sparkles className="w-4 h-4 text-[#fde047]/80" />
@@ -111,12 +152,17 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                   <p className="text-sm text-neutral-600 leading-relaxed max-w-xs mx-auto">
                     {service.shortDescription}
                   </p>
+                  {service.imageCaption && (
+                    <p className="text-[11px] text-[#155e3c] font-medium italic line-clamp-1">
+                      ✦ {service.imageCaption}
+                    </p>
+                  )}
                 </div>
 
                 {/* Dark Green Pill CTA Button */}
                 <button
                   onClick={() => onSelectService(service)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#155e3c] hover:bg-[#0f442b] text-white text-xs sm:text-sm font-semibold shadow-sm hover:shadow transition-all group-hover:px-6"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#155e3c] hover:bg-[#0f442b] text-white text-xs sm:text-sm font-semibold shadow-sm hover:shadow transition-all group-hover:px-6 cursor-pointer"
                 >
                   <span>More Details</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />

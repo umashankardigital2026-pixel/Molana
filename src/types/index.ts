@@ -26,6 +26,9 @@ export interface ServiceItem {
   recommendedWazifa?: string;
   iconType: 'dua' | 'wazifa' | 'ruhani' | 'taweez' | 'marriage' | 'relationship' | 'custom';
   imageTag: string;
+  imageUrl?: string;
+  imageCaption?: string;
+  coupleThemeTag?: string;
   displayOrder: number;
   isActive: boolean;
   metaTitle: string;
@@ -40,6 +43,7 @@ export interface TestimonialItem {
   rating: number;
   serviceCategory: string;
   avatarType: 'couple' | 'man' | 'woman';
+  avatarUrl?: string;
   isApproved: boolean;
   createdAt: string;
 }
@@ -84,6 +88,7 @@ export interface ImageSettings {
   showWhyChooseSkyline: boolean;
   showTestimonialAvatars: boolean;
   aboutCustomImage?: string;
+  logoUrl?: string;
   customImages: Record<string, string>; // key -> image URL or base64
 }
 
@@ -98,6 +103,7 @@ export interface GeneralSettings {
   disclaimerText: string;
   metaTitle: string;
   metaDescription: string;
+  logoUrl?: string;
   socialLinks: {
     facebook: string;
     youtube: string;

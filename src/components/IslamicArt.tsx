@@ -181,98 +181,162 @@ export const HeroSlide3Backdrop: React.FC = () => (
   </div>
 );
 
-// Service 1 Image: Couple Silhouette with sunset glow
+// Service 1 Image: Romantic Lovers Silhouette against golden sunset glow (Dua For Love)
 export const ServiceCoupleImage: React.FC = () => (
-  <div className="w-full h-44 relative overflow-hidden bg-gradient-to-br from-[#e0712a] via-[#aa381e] to-[#2b0c05] flex items-center justify-center">
+  <div className="w-full h-44 relative overflow-hidden bg-gradient-to-br from-[#c2410c] via-[#7c2d12] to-[#1c0804] flex items-center justify-center">
     <svg viewBox="0 0 400 240" className="w-full h-full object-cover">
       <defs>
-        <radialGradient id="cSunset" cx="50%" cy="40%" r="55%">
-          <stop offset="0%" stopColor="#fde047" />
-          <stop offset="45%" stopColor="#ea580c" />
-          <stop offset="100%" stopColor="#450a0a" />
+        <radialGradient id="coupleSunset" cx="50%" cy="38%" r="60%">
+          <stop offset="0%" stopColor="#fef08a" stopOpacity="0.95" />
+          <stop offset="30%" stopColor="#f97316" stopOpacity="0.85" />
+          <stop offset="65%" stopColor="#9a3412" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#1e0804" stopOpacity="0.98" />
+        </radialGradient>
+        <radialGradient id="heartAura" cx="50%" cy="45%" r="35%">
+          <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#ea580c" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <rect width="400" height="240" fill="url(#cSunset)" />
-      {/* Sunset Sun */}
-      <circle cx="200" cy="110" r="45" fill="#fef08a" opacity="0.9" />
-      {/* Couple Silhouette */}
-      <path d="M140 125 C140 105 155 95 170 95 C185 95 195 105 195 125 C195 140 180 150 170 150 C155 150 140 140 140 125 Z" fill="#180502" />
-      <path d="M130 160 C130 145 150 135 170 135 C190 135 210 145 210 160 L215 240 L125 240 Z" fill="#180502" />
-      {/* Partner */}
-      <path d="M205 130 C205 110 220 100 235 100 C250 100 260 110 260 130 C260 145 245 155 235 155 C220 155 205 145 205 130 Z" fill="#180502" />
-      <path d="M195 165 C195 150 215 140 235 140 C255 140 275 150 275 165 L280 240 L190 240 Z" fill="#180502" />
-      {/* Gentle Heart glow above */}
-      <path d="M200 70 C195 60 185 60 180 65 C175 70 175 78 185 88 L200 100 L215 88 C225 78 225 70 220 65 C215 60 205 60 200 70 Z" fill="#fbbf24" opacity="0.8" />
+      {/* Sunset Background */}
+      <rect width="400" height="240" fill="url(#coupleSunset)" />
+      {/* Sunset Orb */}
+      <circle cx="200" cy="95" r="48" fill="#fef08a" opacity="0.95" />
+      <circle cx="200" cy="95" r="75" fill="url(#heartAura)" />
+
+      {/* Bokeh circles */}
+      <circle cx="90" cy="60" r="14" fill="#fef08a" opacity="0.25" />
+      <circle cx="310" cy="70" r="18" fill="#fed7aa" opacity="0.2" />
+      <circle cx="140" cy="40" r="8" fill="#fde047" opacity="0.3" />
+      <circle cx="270" cy="50" r="10" fill="#fde047" opacity="0.3" />
+
+      {/* Distant Mosque silhouette */}
+      <g fill="#2d0b04" opacity="0.45">
+        <path d="M170 140 C170 120 185 110 200 108 C215 110 230 120 230 140 Z" />
+        <rect x="155" y="125" width="5" height="40" />
+        <rect x="240" y="125" width="5" height="40" />
+      </g>
+
+      {/* Close-up Romantic Couple / Lovers Silhouette facing each other intimately */}
+      <g fill="#140402">
+        {/* Male Silhouette on Left */}
+        <path d="M125 110 C125 90 140 80 155 80 C165 80 174 86 177 96 C178 102 176 108 172 112 C178 116 180 122 178 128 C175 133 168 136 160 137 L162 150 C175 152 190 158 195 170 L200 240 L100 240 L105 170 C108 155 115 148 125 142 Z" />
+        {/* Male Hair and jaw profile */}
+        <path d="M145 78 C158 76 168 84 172 94 C175 92 178 95 177 100 C176 104 173 105 171 106 C171 110 173 113 171 116 C168 122 163 124 158 125 Z" />
+
+        {/* Female Silhouette on Right with veil/dupatta draped gracefully */}
+        <path d="M245 112 C245 92 230 82 215 82 C206 82 198 88 195 96 C194 102 196 107 199 111 C194 115 192 121 194 127 C197 133 204 136 212 137 L210 150 C197 152 182 158 177 170 L172 240 L300 240 L295 170 C290 155 280 148 268 142 Z" />
+        {/* Dupatta drape curve */}
+        <path d="M230 82 C248 85 265 98 272 118 C280 140 282 175 285 240 L260 240 C258 180 252 145 242 128 Z" opacity="0.9" />
+
+        {/* Intimate tender touch: Foreheads and hands near center */}
+        <path d="M174 98 C184 96 188 96 198 98 C194 105 186 106 174 98 Z" fill="#fde047" opacity="0.3" />
+      </g>
+
+      {/* Floating glowing heart of love between them */}
+      <g transform="translate(193, 115) scale(0.7)">
+        <path d="M10 30 C10 30 0 20 0 10 C0 3 6 0 10 5 C14 0 20 3 20 10 C20 20 10 30 10 30 Z" fill="#fbbf24" opacity="0.9" />
+        <circle cx="10" cy="12" r="14" fill="#fef08a" opacity="0.3" filter="blur(4px)" />
+      </g>
     </svg>
   </div>
 );
 
-// Service 2 Image: Holy Quran on wooden rehal
+// Service 2 Image: Holy Quran on wooden rehal with Lovers praying together (Wazifa For Love)
 export const ServiceQuranImage: React.FC = () => (
-  <div className="w-full h-44 relative overflow-hidden bg-gradient-to-br from-[#3b2210] via-[#211105] to-[#0d0702] flex items-center justify-center">
+  <div className="w-full h-44 relative overflow-hidden bg-gradient-to-br from-[#451a03] via-[#240c03] to-[#0c0401] flex items-center justify-center">
     <svg viewBox="0 0 400 240" className="w-full h-full object-cover">
       <defs>
-        <radialGradient id="qGlow" cx="50%" cy="40%" r="50%">
-          <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+        <radialGradient id="wazifaGlow" cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stopColor="#fef08a" stopOpacity="0.85" />
+          <stop offset="30%" stopColor="#d97706" stopOpacity="0.6" />
+          <stop offset="75%" stopColor="#451a03" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#0c0401" stopOpacity="0.9" />
         </radialGradient>
       </defs>
-      <rect width="400" height="240" fill="#1f1107" />
-      <circle cx="200" cy="110" r="100" fill="url(#qGlow)" />
-      {/* Wooden Rehal Stand */}
-      <path d="M120 170 L200 100 L280 170 L260 200 L200 150 L140 200 Z" fill="#78350f" />
-      <path d="M140 170 L200 115 L260 170 L250 185 L200 140 L150 185 Z" fill="#92400e" />
-      {/* Holy Quran Pages Open */}
-      <path d="M130 95 C165 75 198 85 200 95 C202 85 235 75 270 95 L265 140 C230 120 202 130 200 140 C198 130 170 120 135 140 Z" fill="#fef3c7" />
+      <rect width="400" height="240" fill="#140602" />
+      <circle cx="200" cy="110" r="110" fill="url(#wazifaGlow)" />
+
+      {/* Couple in gentle supplication / prayer silhouette behind Holy Quran */}
+      <g fill="#1a0703" opacity="0.65">
+        {/* Male praying silhouette on left */}
+        <path d="M80 130 C80 110 95 100 110 100 C125 100 135 110 135 130 C135 145 125 155 115 155 L130 240 L60 240 Z" />
+        {/* Hands in dua */}
+        <path d="M115 120 C125 110 135 115 132 130 Z" fill="#fbbf24" opacity="0.5" />
+        {/* Female partner in prayer on right */}
+        <path d="M290 130 C290 110 275 100 260 100 C245 100 235 110 235 130 C235 145 245 155 255 155 L240 240 L310 240 Z" />
+      </g>
+
+      {/* Wooden Rehal Stand in foreground */}
+      <path d="M120 175 L200 105 L280 175 L260 205 L200 155 L140 205 Z" fill="#78350f" />
+      <path d="M140 175 L200 120 L260 175 L250 190 L200 145 L150 190 Z" fill="#92400e" />
+
+      {/* Holy Quran Pages Open with Warm Golden Radiance */}
+      <path d="M130 100 C165 80 198 90 200 100 C202 90 235 80 270 100 L265 145 C230 125 202 135 200 145 C198 135 170 125 135 145 Z" fill="#fffbeb" />
       {/* Spine & Gold edges */}
-      <path d="M199 92 L201 92 L201 142 L199 142 Z" fill="#b45309" />
-      {/* Quranic Calligraphy Lines */}
-      <g stroke="#92400e" strokeWidth="1.5" strokeLinecap="round" opacity="0.6">
-        <line x1="145" y1="102" x2="190" y2="102" />
-        <line x1="145" y1="112" x2="190" y2="112" />
-        <line x1="145" y1="122" x2="185" y2="122" />
-        <line x1="210" y1="102" x2="255" y2="102" />
-        <line x1="210" y1="112" x2="255" y2="112" />
-        <line x1="215" y1="122" x2="255" y2="122" />
+      <path d="M199 97 L201 97 L201 147 L199 147 Z" fill="#b45309" />
+      {/* Calligraphy Lines */}
+      <g stroke="#92400e" strokeWidth="1.5" strokeLinecap="round" opacity="0.7">
+        <line x1="145" y1="107" x2="190" y2="107" />
+        <line x1="145" y1="117" x2="190" y2="117" />
+        <line x1="145" y1="127" x2="185" y2="127" />
+        <line x1="210" y1="107" x2="255" y2="107" />
+        <line x1="210" y1="117" x2="255" y2="117" />
+        <line x1="215" y1="127" x2="255" y2="127" />
       </g>
       {/* Golden Bookmark Ribbon */}
-      <path d="M200 95 C205 130 215 160 220 180 L212 175 L205 180 Z" fill="#d97706" />
+      <path d="M200 100 C205 135 215 165 220 185 L212 180 L205 185 Z" fill="#d97706" />
+
+      {/* Golden blessing hearts rising */}
+      <circle cx="160" cy="80" r="3" fill="#fbbf24" opacity="0.8" />
+      <circle cx="240" cy="75" r="4" fill="#fbbf24" opacity="0.8" />
     </svg>
   </div>
 );
 
-// Service 3 Image: Hands raised in Dua receiving celestial golden light
+// Service 3 Image: Lovers' Hands Intertwined in Spiritual Blessing (Ruhani Ilm)
 export const ServiceRuhaniImage: React.FC = () => (
-  <div className="w-full h-44 relative overflow-hidden bg-[#0d1f14] flex items-center justify-center">
+  <div className="w-full h-44 relative overflow-hidden bg-[#0a1f14] flex items-center justify-center">
     <svg viewBox="0 0 400 240" className="w-full h-full object-cover">
       <defs>
-        <radialGradient id="rDuaGlow" cx="50%" cy="30%" r="55%">
-          <stop offset="0%" stopColor="#fef08a" stopOpacity="0.9" />
-          <stop offset="40%" stopColor="#d97706" stopOpacity="0.5" />
-          <stop offset="80%" stopColor="#14532d" stopOpacity="0.2" />
-          <stop offset="100%" stopColor="#052e16" stopOpacity="0" />
+        <radialGradient id="ruhaniLoveGlow" cx="50%" cy="30%" r="60%">
+          <stop offset="0%" stopColor="#fef08a" stopOpacity="0.95" />
+          <stop offset="35%" stopColor="#eab308" stopOpacity="0.7" />
+          <stop offset="70%" stopColor="#155e3c" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#051c11" stopOpacity="0.95" />
         </radialGradient>
       </defs>
       <rect width="400" height="240" fill="#061c10" />
-      {/* Divine Golden Light Source */}
-      <circle cx="200" cy="50" r="120" fill="url(#rDuaGlow)" />
-      {/* Beams */}
-      <g stroke="#fde047" strokeWidth="2" opacity="0.35">
-        <line x1="200" y1="10" x2="140" y2="200" />
-        <line x1="200" y1="10" x2="180" y2="200" />
-        <line x1="200" y1="10" x2="220" y2="200" />
-        <line x1="200" y1="10" x2="260" y2="200" />
+      <circle cx="200" cy="60" r="130" fill="url(#ruhaniLoveGlow)" />
+
+      {/* Golden Light Rays of Blessings */}
+      <g stroke="#fde047" strokeWidth="2" opacity="0.4">
+        <line x1="200" y1="10" x2="120" y2="220" />
+        <line x1="200" y1="10" x2="160" y2="220" />
+        <line x1="200" y1="10" x2="200" y2="220" />
+        <line x1="200" y1="10" x2="240" y2="220" />
+        <line x1="200" y1="10" x2="280" y2="220" />
       </g>
-      {/* Raised Hands Silhouette in Supplication */}
+
+      {/* Two Lovers' Hands clasped together in sacred love & prayer */}
       <g fill="#1e293b" opacity="0.95">
-        {/* Left hand */}
-        <path d="M150 170 C150 140 165 110 185 105 C190 104 195 110 192 120 C185 135 180 155 180 185 L160 210 Z" />
-        {/* Right hand */}
-        <path d="M250 170 C250 140 235 110 215 105 C210 104 205 110 208 120 C215 135 220 155 220 185 L240 210 Z" />
-        {/* Palms joined */}
-        <path d="M175 155 C190 165 210 165 225 155 L215 220 L185 220 Z" />
+        {/* Left lover's wrist & hand */}
+        <path d="M120 220 L160 145 C165 135 175 130 185 132 C192 135 195 142 190 150 L165 220 Z" />
+        {/* Right lover's wrist & hand intertwined */}
+        <path d="M280 220 L240 145 C235 135 225 130 215 132 C208 135 205 142 210 150 L235 220 Z" />
+        {/* Fingers clasped */}
+        <path d="M175 140 C185 130 215 130 225 140 C215 160 185 160 175 140 Z" fill="#334155" />
       </g>
-      <circle cx="200" cy="115" r="8" fill="#fbbf24" filter="blur(2px)" />
+
+      {/* Olive wood tasbih beads wrapped around their joined hands */}
+      <g stroke="#78350f" strokeWidth="1.5">
+        <path d="M150 165 C175 180 225 180 250 165" fill="none" stroke="#d4af37" strokeWidth="2" />
+        {[155, 170, 185, 200, 215, 230, 245].map((x, i) => (
+          <circle key={i} cx={x} cy={172 + Math.sin(i * 0.8) * 6} r="4.5" fill="#92400e" stroke="#fbbf24" strokeWidth="1" />
+        ))}
+      </g>
+
+      {/* Celestial Golden Light Orb at center of joined hands */}
+      <circle cx="200" cy="140" r="10" fill="#fef08a" filter="blur(3px)" />
     </svg>
   </div>
 );
