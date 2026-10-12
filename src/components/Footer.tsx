@@ -9,6 +9,10 @@ interface FooterProps {
   onOpenPrivacy: () => void;
   onOpenTerms: () => void;
   onOpenDisclaimer: () => void;
+  isAdminAuthenticated?: boolean;
+  onOpenLogin?: () => void;
+  onOpenAdmin?: () => void;
+  onLogout?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -17,6 +21,10 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenPrivacy,
   onOpenTerms,
   onOpenDisclaimer,
+  isAdminAuthenticated = false,
+  onOpenLogin,
+  onOpenAdmin,
+  onLogout,
 }) => {
   const currentYear = new Date().getFullYear();
 
@@ -212,6 +220,31 @@ export const Footer: React.FC<FooterProps> = ({
             >
               Disclaimer
             </button>
+            <span>|</span>
+            {isAdminAuthenticated ? (
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <button
+                  onClick={onOpenAdmin}
+                  className="text-emerald-300 hover:text-white font-semibold transition-colors cursor-pointer"
+                >
+                  Admin Panel
+                </button>
+                <span>/</span>
+                <button
+                  onClick={onLogout}
+                  className="text-red-300 hover:text-white transition-colors cursor-pointer"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onOpenLogin}
+                className="text-neutral-400 hover:text-[#d4af37] transition-colors cursor-pointer"
+              >
+                Admin Login
+              </button>
+            )}
           </div>
         </div>
       </div>

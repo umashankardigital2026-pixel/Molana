@@ -30,7 +30,9 @@ import {
   Camera,
   FolderPlus,
   Sliders,
+  Puzzle,
 } from 'lucide-react';
+import { AdminExtensionTab } from './AdminExtensionTab';
 import {
   SliderSlide,
   ServiceItem,
@@ -61,8 +63,9 @@ interface AdminPanelProps {
   setContent: React.Dispatch<React.SetStateAction<WebsiteContent>>;
   settings: GeneralSettings;
   setSettings: React.Dispatch<React.SetStateAction<GeneralSettings>>;
-  initialTab?: 'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source';
+  initialTab?: 'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source' | 'extension';
   onClose: () => void;
+  onLogout?: () => void;
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({
@@ -80,10 +83,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   setSettings,
   initialTab = 'dashboard',
   onClose,
+  onLogout,
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source'
+    'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source' | 'extension'
   >(initialTab);
 
   const [notification, setNotification] = useState<string | null>(null);
@@ -389,7 +393,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={onClose}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-colors"
@@ -397,6 +401,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <Eye className="w-3.5 h-3.5" />
               <span>Back to Website</span>
             </button>
+            {onLogout && (
+              <button
+                onClick={() => {
+                  onLogout();
+                  onClose();
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 border border-red-500/40 text-xs font-semibold text-red-200 transition-colors"
+                title="Log out of Admin Portal"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Logout</span>
+              </button>
+            )}
             <button
               onClick={onClose}
               className="p-1.5 text-neutral-400 hover:text-white rounded-lg transition-colors"
@@ -545,7 +562,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <span>Settings & SEO</span>
               </button>
 
-              <div className="pt-2 border-t border-neutral-200">
+              <div className="pt-2 border-t border-neutral-200 space-y-1">
+                <button
+                  onClick={() => setActiveTab('extension')}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
+                    activeTab === 'extension'
+                      ? 'bg-[#155e3c] text-white shadow-xs'
+                      : 'text-neutral-800 hover:bg-neutral-200/60 bg-emerald-50/70'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Puzzle className="w-4 h-4 text-[#d4af37]" />
+                    <span>Admin Extension</span>
+                  </div>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#d4af37] text-neutral-900 font-bold uppercase">
+                    Chrome
+                  </span>
+                </button>
+
                 <button
                   onClick={() => setActiveTab('php-source')}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
@@ -560,7 +594,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
             </div>
 
-            <div className="pt-4 border-t border-neutral-200">
+            <div className="pt-3 border-t border-neutral-200 space-y-2">
               <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200/70 text-[11px] text-emerald-900 space-y-1">
                 <div className="font-bold flex items-center gap-1 text-[#155e3c]">
                   <ShieldCheck className="w-3.5 h-3.5" />
@@ -570,6 +604,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   Changes save live in state & localStorage.
                 </p>
               </div>
+
+              {onLogout && (
+                <button
+                  onClick={() => {
+                    onLogout();
+                    onClose();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200/80 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Log Out Admin</span>
+                </button>
+              )}
             </div>
           </aside>
 
@@ -2805,6 +2852,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </ol>
                 </div>
               </div>
+            )}
+
+            {/* 9. ADMIN EXTENSION SUITE */}
+            {activeTab === 'extension' && (
+              <AdminExtensionTab
+                settings={settings}
+                setSettings={setSettings}
+                enquiries={enquiries}
+                onOpenDashboard={() => setActiveTab('dashboard')}
+                onOpenImages={() => setActiveTab('images')}
+                showToast={showToast}
+              />
             )}
           </main>
         </div>

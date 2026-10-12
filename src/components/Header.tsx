@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, MessageCircle, Menu, X } from 'lucide-react';
+import { Phone, MessageCircle, Menu, X, Lock, Shield, LogOut } from 'lucide-react';
 import { MosqueLogoIcon } from './IslamicArt';
 import { GeneralSettings } from '../types';
 
@@ -7,7 +7,10 @@ interface HeaderProps {
   settings: GeneralSettings;
   announcementText: string;
   onNavigate: (sectionId: string) => void;
+  isAdminAuthenticated?: boolean;
+  onOpenLogin?: () => void;
   onOpenAdmin?: () => void;
+  onLogout?: () => void;
   showAllImages?: boolean;
   onToggleImages?: () => void;
   onOpenImageManager?: () => void;
@@ -17,6 +20,10 @@ export const Header: React.FC<HeaderProps> = ({
   settings,
   announcementText,
   onNavigate,
+  isAdminAuthenticated = false,
+  onOpenLogin,
+  onOpenAdmin,
+  onLogout,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const customLogo = settings.logoUrl || settings.imageSettings?.customImages?.['logo'];
@@ -89,6 +96,39 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <MessageCircle className="w-3.5 h-3.5" />
               </a>
+            </div>
+
+            {/* Admin Login / Logout Option */}
+            <div className="flex items-center pl-1 border-l border-white/10">
+              {isAdminAuthenticated ? (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={onOpenAdmin}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-900/90 hover:bg-emerald-800 text-[11px] text-[#fef08a] border border-emerald-500/40 transition-colors cursor-pointer"
+                    title="Open Admin Portal"
+                  >
+                    <Shield className="w-3 h-3 text-[#d4af37]" />
+                    <span>Admin Panel</span>
+                  </button>
+                  <button
+                    onClick={onLogout}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-950/80 hover:bg-red-900 text-[11px] text-red-200 border border-red-500/30 transition-colors cursor-pointer"
+                    title="Logout from Admin"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={onOpenLogin}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 text-[11px] text-[#d4af37] border border-[#d4af37]/30 transition-colors cursor-pointer"
+                  title="Admin Login & Authentication"
+                >
+                  <Lock className="w-3 h-3 text-[#d4af37]" />
+                  <span>Admin Login</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -202,6 +242,45 @@ export const Header: React.FC<HeaderProps> = ({
                 <Phone className="w-4 h-4" />
                 <span>Call / WhatsApp: {settings.phoneDisplay}</span>
               </a>
+            </div>
+
+            {/* Mobile Admin option */}
+            <div className="pt-2 border-t border-neutral-100 flex items-center justify-between px-1">
+              {isAdminAuthenticated ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenAdmin?.();
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-bold text-[#155e3c] hover:underline"
+                  >
+                    <Shield className="w-3.5 h-3.5 text-[#d4af37]" />
+                    <span>Admin Dashboard</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onLogout?.();
+                    }}
+                    className="flex items-center gap-1 text-xs font-bold text-red-600 hover:underline"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenLogin?.();
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-bold text-neutral-700 hover:text-[#155e3c]"
+                >
+                  <Lock className="w-3.5 h-3.5 text-[#d4af37]" />
+                  <span>Admin Login</span>
+                </button>
+              )}
             </div>
           </div>
         )}

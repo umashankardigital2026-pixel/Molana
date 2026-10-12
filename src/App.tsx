@@ -29,6 +29,8 @@ import { FloatingActions } from './components/FloatingActions';
 import { LeftSideCta } from './components/LeftSideCta';
 import { ServiceDetailModal, LegalModal } from './components/Modals';
 import { AdminPanel } from './components/admin/AdminPanel';
+import { AdminLoginModal } from './components/admin/AdminLoginModal';
+import { AdminQuickBar } from './components/admin/AdminQuickBar';
 
 export default function App() {
   // Load initial state with localStorage support for Admin live editing
@@ -105,21 +107,76 @@ export default function App() {
 
   // Modals & UI States
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem('ms_admin_auth') === 'true' || sessionStorage.getItem('ms_admin_auth') === 'true';
+  });
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [adminInitialTab, setAdminInitialTab] = useState<
-    'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source'
+    'dashboard' | 'sliders' | 'services' | 'images' | 'content' | 'testimonials' | 'enquiries' | 'settings' | 'php-source' | 'extension'
   >('dashboard');
   const [prefilledServiceConsultation, setPrefilledServiceConsultation] = useState('');
+
+  const handleAdminLoginSuccess = () => {
+    setIsAdminAuthenticated(true);
+    setIsLoginModalOpen(false);
+    setIsAdminOpen(true);
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdminAuthenticated(false);
+    localStorage.removeItem('ms_admin_auth');
+    sessionStorage.removeItem('ms_admin_auth');
+    setIsAdminOpen(false);
+    if (window.location.hash === '#admin' || window.location.hash === '#images') {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  };
+
+  const handleToggleAllImages = () => {
+    const current = settings.imageSettings?.showAllImages ?? true;
+    const target = !current;
+    setSettings({
+      ...settings,
+      imageSettings: {
+        ...(settings.imageSettings || {
+          showAllImages: true,
+          showHeroImages: true,
+          showServiceImages: true,
+          showAboutImage: true,
+          showWhyChooseSkyline: true,
+          showTestimonialAvatars: true,
+          customImages: {},
+        }),
+        showAllImages: target,
+        showHeroImages: target,
+        showServiceImages: target,
+        showAboutImage: target,
+        showWhyChooseSkyline: target,
+        showTestimonialAvatars: target,
+      },
+    });
+  };
 
   // Support #admin, #images and Ctrl+Shift+A for administrative access
   useEffect(() => {
     const handleHash = () => {
       if (window.location.hash === '#admin') {
-        setAdminInitialTab('dashboard');
-        setIsAdminOpen(true);
+        const isAuth = localStorage.getItem('ms_admin_auth') === 'true' || sessionStorage.getItem('ms_admin_auth') === 'true';
+        if (isAuth) {
+          setAdminInitialTab('dashboard');
+          setIsAdminOpen(true);
+        } else {
+          setIsLoginModalOpen(true);
+        }
       } else if (window.location.hash === '#images') {
-        setAdminInitialTab('images');
-        setIsAdminOpen(true);
+        const isAuth = localStorage.getItem('ms_admin_auth') === 'true' || sessionStorage.getItem('ms_admin_auth') === 'true';
+        if (isAuth) {
+          setAdminInitialTab('images');
+          setIsAdminOpen(true);
+        } else {
+          setIsLoginModalOpen(true);
+        }
       }
     };
     handleHash();
@@ -128,8 +185,13 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
         e.preventDefault();
-        setAdminInitialTab('dashboard');
-        setIsAdminOpen((prev) => !prev);
+        const isAuth = localStorage.getItem('ms_admin_auth') === 'true' || sessionStorage.getItem('ms_admin_auth') === 'true';
+        if (isAuth) {
+          setAdminInitialTab('dashboard');
+          setIsAdminOpen((prev) => !prev);
+        } else {
+          setIsLoginModalOpen(true);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -185,6 +247,13 @@ export default function App() {
         settings={settings}
         announcementText={content.announcementText}
         onNavigate={scrollToSection}
+        isAdminAuthenticated={isAdminAuthenticated}
+        onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenAdmin={() => {
+          setAdminInitialTab('dashboard');
+          setIsAdminOpen(true);
+        }}
+        onLogout={handleAdminLogout}
       />
 
       {/* Main Content Area */}
@@ -250,6 +319,13 @@ export default function App() {
       <Footer
         settings={settings}
         onNavigate={scrollToSection}
+        isAdminAuthenticated={isAdminAuthenticated}
+        onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenAdmin={() => {
+          setAdminInitialTab('dashboard');
+          setIsAdminOpen(true);
+        }}
+        onLogout={handleAdminLogout}
         onOpenPrivacy={() =>
           setLegalModalState({
             isOpen: true,
@@ -288,6 +364,26 @@ Sabka Bhala, Sabka Sukoon. Dua aur wazifa qalb ke itminaan aur roohani barkat ke
       {/* Floating Action Buttons */}
       <FloatingActions settings={settings} />
 
+      {/* In-App Admin Extension Companion Quick Bar */}
+      <AdminQuickBar
+        isAuthenticated={isAdminAuthenticated}
+        onOpenAdmin={(tab) => {
+          if (tab) setAdminInitialTab(tab);
+          setIsAdminOpen(true);
+        }}
+        onLogout={handleAdminLogout}
+        enquiries={enquiries}
+        showAllImages={settings.imageSettings?.showAllImages ?? true}
+        onToggleImages={handleToggleAllImages}
+      />
+
+      {/* Admin Authentication Login Modal */}
+      <AdminLoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLoginSuccess={handleAdminLoginSuccess}
+      />
+
       {/* Service Detail Modal */}
       <ServiceDetailModal
         service={selectedService}
@@ -320,6 +416,7 @@ Sabka Bhala, Sabka Sukoon. Dua aur wazifa qalb ke itminaan aur roohani barkat ke
           settings={settings}
           setSettings={setSettings}
           initialTab={adminInitialTab}
+          onLogout={handleAdminLogout}
           onClose={() => {
             setIsAdminOpen(false);
             if (window.location.hash === '#admin' || window.location.hash === '#images') {
