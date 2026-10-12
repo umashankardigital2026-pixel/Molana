@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, CheckCircle2, MessageCircle, Phone } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, MessageCircle, Phone, Camera } from 'lucide-react';
 import { SliderSlide, ImageSettings } from '../types';
 import { HeroSlide1Backdrop, HeroSlide2Backdrop, HeroSlide3Backdrop } from './IslamicArt';
 
@@ -7,12 +7,16 @@ interface HeroSliderProps {
   slides: SliderSlide[];
   imageSettings?: ImageSettings;
   onOpenConsultation: (serviceSuggestion?: string) => void;
+  isAdminAuthenticated?: boolean;
+  onOpenImageManager?: (slotId?: string) => void;
 }
 
 export const HeroSlider: React.FC<HeroSliderProps> = ({
   slides,
   imageSettings,
   onOpenConsultation,
+  isAdminAuthenticated,
+  onOpenImageManager,
 }) => {
   const activeSlides = slides.filter((s) => s.isActive);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -53,6 +57,21 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({
 
   return (
     <section className="relative w-full overflow-hidden bg-[#0a180f] text-white min-h-[580px] sm:min-h-[620px] lg:min-h-[640px] flex items-center">
+      {/* Quick Admin Change Slide Image Button */}
+      {isAdminAuthenticated && (
+        <div className="absolute top-4 right-4 z-30">
+          <button
+            type="button"
+            onClick={() => onOpenImageManager?.(currentSlide.id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0b1a12]/90 hover:bg-[#155e3c] text-[#fde047] text-xs font-bold rounded-xl border border-[#d4af37]/60 shadow-lg backdrop-blur-md transition-all cursor-pointer hover:scale-105"
+            title={`Change Photo for ${currentSlide.heading}`}
+          >
+            <Camera className="w-3.5 h-3.5 text-[#d4af37]" />
+            <span>Change Slide Image</span>
+          </button>
+        </div>
+      )}
+
       {/* Background Graphic Crossfade or Clean Minimal Canvas if Images Removed */}
       <div className="absolute inset-0">
         {!showImages ? (

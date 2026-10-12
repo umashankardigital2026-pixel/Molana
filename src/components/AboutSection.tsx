@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Sparkles, Clock, HeartHandshake, Phone, MessageCircle } from 'lucide-react';
+import { ShieldCheck, Sparkles, Clock, HeartHandshake, Phone, MessageCircle, Camera } from 'lucide-react';
 import { WebsiteContent, GeneralSettings } from '../types';
 import { AboutQuranLanternImage } from './IslamicArt';
 
@@ -7,12 +7,16 @@ interface AboutSectionProps {
   content: WebsiteContent;
   settings: GeneralSettings;
   onOpenConsultation: () => void;
+  isAdminAuthenticated?: boolean;
+  onOpenImageManager?: (slotId?: string) => void;
 }
 
 export const AboutSection: React.FC<AboutSectionProps> = ({
   content,
   settings,
   onOpenConsultation,
+  isAdminAuthenticated,
+  onOpenImageManager,
 }) => {
   const iconMap: Record<number, React.ReactNode> = {
     0: <ShieldCheck className="w-5 h-5 text-white" />,
@@ -34,7 +38,18 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           {/* Left Column: Atmospheric Quran & Lantern Illustration or Clean Spiritual Quote */}
           {showImage ? (
-            <div className="lg:col-span-5">
+            <div className="lg:col-span-5 relative group">
+              {isAdminAuthenticated && (
+                <button
+                  type="button"
+                  onClick={() => onOpenImageManager?.('about')}
+                  className="absolute top-3 right-3 z-20 px-2.5 py-1 bg-[#0b1a12]/85 hover:bg-[#155e3c] text-[#fde047] text-[11px] font-bold rounded-lg border border-[#d4af37]/60 shadow-md backdrop-blur-xs flex items-center gap-1 cursor-pointer transition-all hover:scale-105"
+                  title="Change Maulana Shamsuddin About Photo"
+                >
+                  <Camera className="w-3 h-3 text-[#d4af37]" />
+                  <span>Change Photo</span>
+                </button>
+              )}
               {customAboutImg ? (
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-[#d4af37]/30 bg-neutral-900">
                   <img

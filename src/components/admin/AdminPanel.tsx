@@ -39,6 +39,7 @@ import {
   ShieldAlert,
   AlertTriangle,
   CheckCircle2,
+  Save,
 } from 'lucide-react';
 import { AdminExtensionTab } from './AdminExtensionTab';
 import {
@@ -57,6 +58,11 @@ import {
   INITIAL_SLIDES,
   INITIAL_TESTIMONIALS,
 } from '../../data/initialData';
+import {
+  compressImageFile,
+  WEBSITE_IMAGE_SLOTS,
+  safeSaveToLocalStorage,
+} from '../../utils/imageHelper';
 
 interface AdminPanelProps {
   slides: SliderSlide[];
@@ -250,6 +256,101 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [customImageUrlInput, setCustomImageUrlInput] = useState('');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+  // Dedicated Add / Change Website Image Studio States
+  const [studioTargetSlot, setStudioTargetSlot] = useState<string>('slide-1');
+  const [studioSourceTab, setStudioSourceTab] = useState<'upload' | 'url' | 'presets'>('upload');
+  const [studioFilePreview, setStudioFilePreview] = useState<string | null>(null);
+  const [studioUrlInput, setStudioUrlInput] = useState<string>('');
+  const [studioThemeTag, setStudioThemeTag] = useState<string>('');
+  const [studioCaption, setStudioCaption] = useState<string>('');
+  const [studioPresetCategory, setStudioPresetCategory] = useState<'couple' | 'spiritual' | 'avatars'>('couple');
+
+  // File Compression & Status States
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [compressionStatus, setCompressionStatus] = useState<string | null>(null);
+
+  // Global Save Changes State & Timestamp
+  const [lastSavedTimestamp, setLastSavedTimestamp] = useState<string>(() => {
+    return localStorage.getItem('ms_last_saved_time') || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccessNotice, setSaveSuccessNotice] = useState(false);
+
+  // Global Save Changes Handler - Safely commits all edits to localStorage and triggers feedback
+  const handleSaveChanges = (customMessage?: string) => {
+    setIsSaving(true);
+    safeSaveToLocalStorage('ms_slides', slides);
+    safeSaveToLocalStorage('ms_services', services);
+    safeSaveToLocalStorage('ms_testimonials', testimonials);
+    safeSaveToLocalStorage('ms_enquiries', enquiries);
+    safeSaveToLocalStorage('ms_content', content);
+    safeSaveToLocalStorage('ms_settings', settings);
+
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setLastSavedTimestamp(timeStr);
+    try {
+      localStorage.setItem('ms_last_saved_time', timeStr);
+    } catch {}
+
+    setTimeout(() => {
+      setIsSaving(false);
+      setSaveSuccessNotice(true);
+      setTimeout(() => setSaveSuccessNotice(false), 3500);
+      showToast(customMessage || '✓ All changes & images successfully saved to live website!');
+    }, 200);
+  };
+
+  // Safe file compressor to prevent LocalStorage Quota Exceeded errors
+  const processAndCompressFile = async (
+    file: File,
+    maxWidth = 1200,
+    maxHeight = 900
+  ): Promise<string | null> => {
+    try {
+      setIsProcessingFile(true);
+      const originalSizeKb = Math.round(file.size / 1024);
+      const compressedDataUrl = await compressImageFile(file, maxWidth, maxHeight, 0.82);
+      const compressedSizeKb = Math.round((compressedDataUrl.length * 3) / 4 / 1024);
+      setCompressionStatus(
+        `Optimized "${file.name}": ${originalSizeKb} KB → ${compressedSizeKb} KB (Web Ready)`
+      );
+      setTimeout(() => setCompressionStatus(null), 5000);
+      return compressedDataUrl;
+    } catch (err: any) {
+      console.error('File compression error:', err);
+      showToast('Error processing image. Please try a different photo.');
+      return null;
+    } finally {
+      setIsProcessingFile(false);
+    }
+  };
+
+  // Helper to look up current active image for any slot ID
+  const getSlotActiveImage = (slotId: string): string => {
+    if (slotId.startsWith('slide-')) {
+      const s = slides.find((slide) => slide.id === slotId);
+      return s?.imageUrl || currentImageSettings.customImages?.[slotId] || '';
+    }
+    if (slotId.startsWith('srv-')) {
+      const s = services.find((srv) => srv.id === slotId);
+      return s?.imageUrl || currentImageSettings.customImages?.[slotId] || '';
+    }
+    if (slotId.startsWith('test-')) {
+      const t = testimonials.find((test) => test.id === slotId);
+      return t?.avatarUrl || currentImageSettings.customImages?.[slotId] || '';
+    }
+    if (slotId === 'about') {
+      return currentImageSettings.aboutCustomImage || currentImageSettings.customImages?.['about'] || '';
+    }
+    if (slotId === 'logo') {
+      return settings.logoUrl || currentImageSettings.customImages?.['logo'] || '';
+    }
+    if (slotId === 'whychoose') {
+      return currentImageSettings.customImages?.['whychoose'] || '';
+    }
+    return currentImageSettings.customImages?.[slotId] || '';
+  };
+
   // Universal Replace Modal State
   const [replaceModalSlot, setReplaceModalSlot] = useState<{
     id: string;
@@ -306,7 +407,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     showToast(`Image visibility for ${String(key)} updated.`);
   };
 
-  // Centralized apply image to any slot (slide, service, testimonial, about, logo, or custom)
+  // Centralized apply image to any slot (slide, service, testimonial, about, logo, whychoose, or custom)
   const applyImageToSlot = (
     slotId: string,
     url: string,
@@ -541,7 +642,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Prominent Global Save Changes Button */}
+            <button
+              type="button"
+              onClick={() => handleSaveChanges()}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
+                saveSuccessNotice
+                  ? 'bg-emerald-400 text-[#071a10] ring-2 ring-white scale-102'
+                  : 'bg-[#d4af37] hover:bg-[#b89324] text-[#0b1a12] active:scale-98'
+              }`}
+              title="Save all content, images, and settings to the live website"
+            >
+              {saveSuccessNotice ? (
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#071a10]" />
+              ) : (
+                <Save className="w-3.5 h-3.5 text-[#0b1a12]" />
+              )}
+              <span>{isSaving ? 'Saving...' : saveSuccessNotice ? 'Saved Live!' : 'Save Changes'}</span>
+            </button>
+
+            <span className="hidden xl:inline text-[11px] text-emerald-200/90 font-mono">
+              Saved: {lastSavedTimestamp}
+            </span>
+
             <button
               onClick={() => setActiveTab('security')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
@@ -1209,14 +1333,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                     type="file"
                                     accept="image/*"
                                     className="hidden"
-                                    onChange={(e) => {
+                                    onChange={async (e) => {
                                       const file = e.target.files?.[0];
                                       if (!file) return;
-                                      const reader = new FileReader();
-                                      reader.onload = (ev) => {
-                                        applyImageToSlot(slide.id, ev.target?.result as string);
-                                      };
-                                      reader.readAsDataURL(file);
+                                      const compressed = await processAndCompressFile(file);
+                                      if (compressed) {
+                                        applyImageToSlot(slide.id, compressed);
+                                        handleSaveChanges(`Photo for slide "${slide.heading}" uploaded and saved!`);
+                                      }
                                     }}
                                   />
                                 </label>
@@ -1231,7 +1355,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                       currentUrl: slide.imageUrl,
                                     })
                                   }
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded-lg text-[11px] transition-colors"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded-lg text-[11px] transition-colors cursor-pointer"
                                 >
                                   <RefreshCw className="w-3 h-3" />
                                   <span>Replace Photo</span>
@@ -1240,8 +1364,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 {slide.imageUrl && (
                                   <button
                                     type="button"
-                                    onClick={() => removeImageFromSlot(slide.id)}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-lg text-[11px] transition-colors"
+                                    onClick={() => {
+                                      removeImageFromSlot(slide.id);
+                                      handleSaveChanges(`Photo removed from slide "${slide.heading}".`);
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-lg text-[11px] transition-colors cursor-pointer"
                                   >
                                     <Trash2 className="w-3 h-3" />
                                     <span>Remove Photo</span>
@@ -1254,6 +1381,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* Save Sliders Changes Bar */}
+                <div className="pt-4 border-t border-neutral-200 flex flex-wrap items-center justify-between gap-3 bg-neutral-50 p-4 rounded-2xl">
+                  <span className="text-xs text-neutral-500 font-mono">
+                    Last saved: {lastSavedTimestamp}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveChanges('Hero sliders saved successfully to live website!')}
+                    className="px-5 py-2.5 bg-[#155e3c] hover:bg-[#0f442b] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <Save className="w-4 h-4 text-[#d4af37]" />
+                    <span>Save Slider Changes</span>
+                  </button>
                 </div>
               </div>
             )}
@@ -1532,14 +1674,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                     type="file"
                                     accept="image/*"
                                     className="hidden"
-                                    onChange={(e) => {
+                                    onChange={async (e) => {
                                       const file = e.target.files?.[0];
                                       if (!file) return;
-                                      const reader = new FileReader();
-                                      reader.onload = (ev) => {
-                                        applyImageToSlot(srv.id, ev.target?.result as string, srv.coupleThemeTag, srv.imageCaption);
-                                      };
-                                      reader.readAsDataURL(file);
+                                      const compressed = await processAndCompressFile(file);
+                                      if (compressed) {
+                                        applyImageToSlot(srv.id, compressed, srv.coupleThemeTag, srv.imageCaption);
+                                        handleSaveChanges(`Photo for service "${srv.title}" uploaded and saved!`);
+                                      }
                                     }}
                                   />
                                 </label>
@@ -1556,7 +1698,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                       imageCaption: srv.imageCaption,
                                     })
                                   }
-                                  className="inline-flex items-center gap-1 px-2 py-1 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded text-[10px]"
+                                  className="inline-flex items-center gap-1 px-2 py-1 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded text-[10px] cursor-pointer"
                                 >
                                   <RefreshCw className="w-2.5 h-2.5" />
                                   <span>Replace</span>
@@ -1565,8 +1707,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 {srv.imageUrl && (
                                   <button
                                     type="button"
-                                    onClick={() => removeImageFromSlot(srv.id)}
-                                    className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded text-[10px]"
+                                    onClick={() => {
+                                      removeImageFromSlot(srv.id);
+                                      handleSaveChanges(`Photo removed from service "${srv.title}".`);
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded text-[10px] cursor-pointer"
                                     title="Remove this photo"
                                   >
                                     <Trash2 className="w-2.5 h-2.5" />
@@ -1586,10 +1731,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               <button
                                 key={p.id}
                                 type="button"
-                                onClick={() =>
-                                  applyImageToSlot(srv.id, p.imageUrl, p.category, p.description)
-                                }
-                                className="px-2 py-0.5 rounded bg-white hover:bg-emerald-100 text-neutral-700 border border-neutral-200 text-[10px] shrink-0 font-medium transition-colors"
+                                onClick={() => {
+                                  applyImageToSlot(srv.id, p.imageUrl, p.category, p.description);
+                                  handleSaveChanges(`Preset "${p.category}" applied to service "${srv.title}".`);
+                                }}
+                                className="px-2 py-0.5 rounded bg-white hover:bg-emerald-100 text-neutral-700 border border-neutral-200 text-[10px] shrink-0 font-medium transition-colors cursor-pointer"
                               >
                                 {p.category}
                               </button>
@@ -1599,6 +1745,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* Save Services Changes Bar */}
+                <div className="pt-4 border-t border-neutral-200 flex flex-wrap items-center justify-between gap-3 bg-neutral-50 p-4 rounded-2xl">
+                  <span className="text-xs text-neutral-500 font-mono">
+                    Last saved: {lastSavedTimestamp}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveChanges('Spiritual services saved successfully to live website!')}
+                    className="px-5 py-2.5 bg-[#155e3c] hover:bg-[#0f442b] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <Save className="w-4 h-4 text-[#d4af37]" />
+                    <span>Save Service Changes</span>
+                  </button>
                 </div>
               </div>
             )}
@@ -1635,6 +1796,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                      {/* Prominent Save Changes Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleSaveChanges()}
+                        className="px-4 py-2 bg-[#d4af37] hover:bg-[#b89324] text-[#0b1a12] text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer ring-2 ring-[#d4af37]/40 active:scale-95"
+                        title="Save all changes to the live website"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#0b1a12]" />
+                        <span>Save Changes Now</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => handleToggleAllImages(false)}
@@ -1686,7 +1858,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               customImages: updatedCustom,
                             },
                           });
-                          showToast('All 6 relevant couple & lover photos applied successfully!');
+                          handleSaveChanges('All 6 relevant couple & lover photos applied and saved successfully!');
                         }}
                         className="px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl border border-emerald-400/30 transition-all flex items-center gap-1.5"
                         title="Apply curated lovers & couple photos to all services"
@@ -1703,6 +1875,503 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <Plus className="w-3.5 h-3.5" />
                         <span>Add Custom Slot</span>
                       </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. DEDICATED ADD & CHANGE WEBSITE IMAGE STUDIO */}
+                <div className="p-6 bg-white rounded-3xl border-2 border-emerald-600/30 shadow-md space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Camera className="w-5 h-5 text-[#155e3c]" />
+                        <h4 className="font-heading text-lg font-bold text-neutral-900">
+                          Add or Change Any Website Image
+                        </h4>
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          Live Studio
+                        </span>
+                      </div>
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Select any section across the site to upload from your computer or phone, enter a web URL, or apply curated presets. Click "Save Changes" to lock it in.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSaveChanges()}
+                        className="px-4 py-2 bg-[#155e3c] hover:bg-[#0f442b] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Save className="w-3.5 h-3.5 text-[#d4af37]" />
+                        <span>Save All Changes</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Step 1: Choose Target Location */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-neutral-800 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-[#155e3c] text-white text-[11px] flex items-center justify-center font-bold">1</span>
+                        <span>Choose Website Image Location:</span>
+                      </span>
+                      {WEBSITE_IMAGE_SLOTS.find((s) => s.id === studioTargetSlot) && (
+                        <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-mono border border-emerald-200">
+                          Recommended: {WEBSITE_IMAGE_SLOTS.find((s) => s.id === studioTargetSlot)?.recommendedSize}
+                        </span>
+                      )}
+                    </label>
+
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                      <div className="md:col-span-8">
+                        <select
+                          value={studioTargetSlot}
+                          onChange={(e) => {
+                            const newSlot = e.target.value;
+                            setStudioTargetSlot(newSlot);
+                            setStudioFilePreview(null);
+                            setStudioUrlInput('');
+                            const srv = services.find((s) => s.id === newSlot);
+                            if (srv) {
+                              setStudioThemeTag(srv.coupleThemeTag || '');
+                              setStudioCaption(srv.imageCaption || '');
+                            } else {
+                              setStudioThemeTag('');
+                              setStudioCaption('');
+                            }
+                          }}
+                          className="w-full px-3.5 py-2.5 bg-neutral-50 hover:bg-white border-2 border-neutral-300 focus:border-[#155e3c] rounded-xl text-xs sm:text-sm font-semibold text-neutral-800 transition-all cursor-pointer shadow-2xs"
+                        >
+                          <optgroup label="🕌 Hero Slider (Header Backgrounds)">
+                            <option value="slide-1">Hero Slide 1: Sacred Dua & Wazifa For Love (1600 × 900)</option>
+                            <option value="slide-2">Hero Slide 2: Love Marriage & Family Harmony (1600 × 900)</option>
+                            <option value="slide-3">Hero Slide 3: Personal Spiritual Guidance & Peace (1600 × 900)</option>
+                          </optgroup>
+                          <optgroup label="💖 Spiritual Services (Couple & Consultation Cards)">
+                            <option value="srv-1">Service 1: Dua For Love (800 × 600)</option>
+                            <option value="srv-2">Service 2: Wazifa For Love (800 × 600)</option>
+                            <option value="srv-3">Service 3: Dua For Love Marriage (800 × 600)</option>
+                            <option value="srv-4">Service 4: Taweez For Love & Protection (800 × 600)</option>
+                            <option value="srv-5">Service 5: Dua To Get Lost Love Back (800 × 600)</option>
+                            <option value="srv-6">Service 6: Relationship & Marital Problem (800 × 600)</option>
+                          </optgroup>
+                          <optgroup label="📖 About & Brand Identity">
+                            <option value="about">About Maulana Shamsuddin Portrait Photo (800 × 800)</option>
+                            <option value="logo">Header & Footer Website Logo Crest (500 × 500)</option>
+                            <option value="whychoose">Why Choose Us Banner Graphic (1200 × 600)</option>
+                          </optgroup>
+                          <optgroup label="👤 Client Testimonials">
+                            <option value="test-1">Testimonial 1: Sister Fatima (Hyderabad)</option>
+                            <option value="test-2">Testimonial 2: Brother Zaid (Dubai, UAE)</option>
+                            <option value="test-3">Testimonial 3: Sister Ayesha (London, UK)</option>
+                          </optgroup>
+                          {Object.keys(currentImageSettings.customImages || {})
+                            .filter((k) => !['slide-1','slide-2','slide-3','srv-1','srv-2','srv-3','srv-4','srv-5','srv-6','about','logo','whychoose','test-1','test-2','test-3'].includes(k))
+                            .map((k) => (
+                              <option key={k} value={k}>Custom Slot: {k}</option>
+                            ))}
+                        </select>
+                      </div>
+
+                      <div className="md:col-span-4 flex items-center gap-2">
+                        <span className="text-xs text-neutral-500 font-medium truncate">
+                          Currently Active:
+                        </span>
+                        {getSlotActiveImage(studioTargetSlot) ? (
+                          <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                            <Check className="w-3 h-3" />
+                            <span>Custom Photo</span>
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-medium text-neutral-600 bg-neutral-200 px-2 py-0.5 rounded-full shrink-0">
+                            Default Artwork
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 2: Choose Image Source */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-[#155e3c] text-white text-[11px] flex items-center justify-center font-bold">2</span>
+                      <span>Select How to Provide New Image:</span>
+                    </label>
+
+                    {/* Source Tabs */}
+                    <div className="flex border-b border-neutral-200 gap-2 overflow-x-auto text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setStudioSourceTab('upload')}
+                        className={`pb-2.5 px-3 font-bold transition-all flex items-center gap-1.5 border-b-2 cursor-pointer shrink-0 ${
+                          studioSourceTab === 'upload'
+                            ? 'border-[#155e3c] text-[#155e3c]'
+                            : 'border-transparent text-neutral-500 hover:text-neutral-800'
+                        }`}
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload From Device (Auto-Compressed)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setStudioSourceTab('url')}
+                        className={`pb-2.5 px-3 font-bold transition-all flex items-center gap-1.5 border-b-2 cursor-pointer shrink-0 ${
+                          studioSourceTab === 'url'
+                            ? 'border-[#155e3c] text-[#155e3c]'
+                            : 'border-transparent text-neutral-500 hover:text-neutral-800'
+                        }`}
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Paste Web Image URL</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setStudioSourceTab('presets')}
+                        className={`pb-2.5 px-3 font-bold transition-all flex items-center gap-1.5 border-b-2 cursor-pointer shrink-0 ${
+                          studioSourceTab === 'presets'
+                            ? 'border-[#155e3c] text-[#155e3c]'
+                            : 'border-transparent text-neutral-500 hover:text-neutral-800'
+                        }`}
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
+                        <span>Choose From Curated Presets</span>
+                      </button>
+                    </div>
+
+                    {/* Tab 1: Upload */}
+                    {studioSourceTab === 'upload' && (
+                      <div className="p-4 bg-emerald-50/40 border-2 border-dashed border-emerald-300 rounded-2xl text-center space-y-2">
+                        <Upload className="w-7 h-7 text-[#155e3c] mx-auto" />
+                        <div>
+                          <p className="text-xs font-bold text-neutral-800">
+                            Select an image from your computer or phone
+                          </p>
+                          <p className="text-[11px] text-neutral-500">
+                            Automatic smart compression keeps web performance instant and safe (JPG, PNG, WEBP)
+                          </p>
+                        </div>
+                        <label className="inline-block cursor-pointer px-4 py-2 bg-[#155e3c] hover:bg-[#0f442b] text-white text-xs font-bold rounded-xl shadow-xs transition-all">
+                          <span>{isProcessingFile ? 'Processing...' : 'Browse / Choose File'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={isProcessingFile}
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const compressed = await processAndCompressFile(file);
+                              if (compressed) {
+                                setStudioFilePreview(compressed);
+                                setStudioUrlInput('');
+                              }
+                            }}
+                          />
+                        </label>
+                        {compressionStatus && (
+                          <div className="text-[11px] font-semibold text-emerald-800 bg-emerald-100/80 px-3 py-1 rounded-lg inline-block">
+                            ✓ {compressionStatus}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Tab 2: URL */}
+                    {studioSourceTab === 'url' && (
+                      <div className="space-y-2 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+                        <label className="text-xs font-bold text-neutral-700 block">
+                          Paste Direct Image Web Link (URL):
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="url"
+                            value={studioUrlInput}
+                            onChange={(e) => {
+                              setStudioUrlInput(e.target.value);
+                              setStudioFilePreview(null);
+                            }}
+                            placeholder="https://images.unsplash.com/photo-..."
+                            className="flex-1 px-3 py-2 bg-white border border-neutral-300 rounded-xl text-xs font-mono"
+                          />
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const text = await navigator.clipboard?.readText();
+                                if (text && text.startsWith('http')) {
+                                  setStudioUrlInput(text);
+                                  setStudioFilePreview(null);
+                                  showToast('URL pasted from clipboard');
+                                }
+                              } catch {}
+                            }}
+                            className="px-3 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-xl text-xs font-bold cursor-pointer"
+                          >
+                            Paste
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tab 3: Presets */}
+                    {studioSourceTab === 'presets' && (
+                      <div className="space-y-3 p-3 bg-neutral-50 rounded-2xl border border-neutral-200">
+                        <div className="flex gap-2 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => setStudioPresetCategory('couple')}
+                            className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                              studioPresetCategory === 'couple'
+                                ? 'bg-[#155e3c] text-white shadow-xs'
+                                : 'bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-100'
+                            }`}
+                          >
+                            Lovers & Couples ({COUPLE_PHOTO_PRESETS.length})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setStudioPresetCategory('spiritual')}
+                            className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                              studioPresetCategory === 'spiritual'
+                                ? 'bg-[#155e3c] text-white shadow-xs'
+                                : 'bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-100'
+                            }`}
+                          >
+                            Spiritual / Lanterns ({SPIRITUAL_PHOTO_PRESETS.length})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setStudioPresetCategory('avatars')}
+                            className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                              studioPresetCategory === 'avatars'
+                                ? 'bg-[#155e3c] text-white shadow-xs'
+                                : 'bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-100'
+                            }`}
+                          >
+                            Client Avatars ({CLIENT_AVATAR_PRESETS.length})
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-h-56 overflow-y-auto p-1">
+                          {studioPresetCategory === 'couple' &&
+                            COUPLE_PHOTO_PRESETS.map((p) => (
+                              <div
+                                key={p.id}
+                                onClick={() => {
+                                  setStudioFilePreview(p.imageUrl);
+                                  setStudioUrlInput(p.imageUrl);
+                                  setStudioThemeTag(p.category);
+                                  setStudioCaption(p.description);
+                                }}
+                                className={`cursor-pointer rounded-xl border overflow-hidden bg-white p-1 transition-all ${
+                                  (studioFilePreview === p.imageUrl || studioUrlInput === p.imageUrl)
+                                    ? 'border-emerald-500 ring-2 ring-emerald-400'
+                                    : 'border-neutral-200 hover:border-emerald-300'
+                                }`}
+                              >
+                                <div className="h-20 bg-neutral-900 rounded overflow-hidden">
+                                  <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover" />
+                                </div>
+                                <p className="text-[10px] font-bold text-neutral-800 truncate mt-1">{p.title}</p>
+                              </div>
+                            ))}
+
+                          {studioPresetCategory === 'spiritual' &&
+                            SPIRITUAL_PHOTO_PRESETS.map((p) => (
+                              <div
+                                key={p.id}
+                                onClick={() => {
+                                  setStudioFilePreview(p.imageUrl);
+                                  setStudioUrlInput(p.imageUrl);
+                                  setStudioThemeTag(p.category);
+                                  setStudioCaption(p.description);
+                                }}
+                                className={`cursor-pointer rounded-xl border overflow-hidden bg-white p-1 transition-all ${
+                                  (studioFilePreview === p.imageUrl || studioUrlInput === p.imageUrl)
+                                    ? 'border-emerald-500 ring-2 ring-emerald-400'
+                                    : 'border-neutral-200 hover:border-emerald-300'
+                                }`}
+                              >
+                                <div className="h-20 bg-neutral-900 rounded overflow-hidden">
+                                  <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover" />
+                                </div>
+                                <p className="text-[10px] font-bold text-neutral-800 truncate mt-1">{p.title}</p>
+                              </div>
+                            ))}
+
+                          {studioPresetCategory === 'avatars' &&
+                            CLIENT_AVATAR_PRESETS.map((p) => (
+                              <div
+                                key={p.id}
+                                onClick={() => {
+                                  setStudioFilePreview(p.imageUrl);
+                                  setStudioUrlInput(p.imageUrl);
+                                }}
+                                className={`cursor-pointer rounded-xl border overflow-hidden bg-white p-1 text-center transition-all ${
+                                  (studioFilePreview === p.imageUrl || studioUrlInput === p.imageUrl)
+                                    ? 'border-emerald-500 ring-2 ring-emerald-400'
+                                    : 'border-neutral-200 hover:border-emerald-300'
+                                }`}
+                              >
+                                <div className="w-12 h-12 mx-auto rounded-full overflow-hidden border border-neutral-200 my-1">
+                                  <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                                </div>
+                                <p className="text-[10px] font-bold text-neutral-800 truncate">{p.name}</p>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Step 3: Optional Caption & Tag for Services/Slides */}
+                  {(studioTargetSlot.startsWith('srv-') || studioTargetSlot.startsWith('slide-')) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1 border-t border-neutral-100">
+                      <div>
+                        <label className="font-bold text-neutral-700 block mb-1">
+                          Theme Badge Tag (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={studioThemeTag}
+                          onChange={(e) => setStudioThemeTag(e.target.value)}
+                          placeholder="e.g. Dua For Lovers / Sacred Guidance"
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-neutral-700 block mb-1">
+                          Photo Caption (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={studioCaption}
+                          onChange={(e) => setStudioCaption(e.target.value)}
+                          placeholder="e.g. Loving couple praying in sunset..."
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-xs"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 4: Side-by-Side Preview & Apply */}
+                  <div className="space-y-3 pt-2 border-t border-neutral-100">
+                    <label className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                      <span className="w-5 h-5 rounded-full bg-[#155e3c] text-white text-[11px] flex items-center justify-center font-bold">3</span>
+                      <span>Review & Confirm Changes:</span>
+                    </label>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Left: Current Active */}
+                      <div className="p-3 bg-neutral-50 rounded-2xl border border-neutral-200 space-y-2">
+                        <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
+                          Currently Active on Website
+                        </span>
+                        <div className="w-full h-36 bg-neutral-900 rounded-xl overflow-hidden relative border border-neutral-300 flex items-center justify-center">
+                          {getSlotActiveImage(studioTargetSlot) ? (
+                            <img
+                              src={getSlotActiveImage(studioTargetSlot)}
+                              alt="Current active"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="text-center p-3 text-neutral-400 text-xs">
+                              <ImageIcon className="w-6 h-6 mx-auto mb-1 opacity-60" />
+                              <span>Default Islamic Vector Artwork Active</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right: New Staged Image */}
+                      <div className="p-3 bg-emerald-50/50 rounded-2xl border-2 border-emerald-400 space-y-2">
+                        <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block flex items-center justify-between">
+                          <span>New Image to Apply</span>
+                          {(studioFilePreview || studioUrlInput.trim()) && (
+                            <span className="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded text-[10px]">
+                              ✓ Ready
+                            </span>
+                          )}
+                        </span>
+                        <div className="w-full h-36 bg-neutral-900 rounded-xl overflow-hidden relative border border-emerald-300 flex items-center justify-center">
+                          {studioFilePreview || studioUrlInput.trim() ? (
+                            <img
+                              src={studioFilePreview || studioUrlInput.trim()}
+                              alt="Staged"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="text-center p-3 text-neutral-400 text-xs">
+                              <span>Choose a file or paste URL above to preview here</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Action Bar of Studio Box */}
+                    <div className="pt-3 flex flex-wrap items-center justify-between gap-3 bg-neutral-50 p-4 rounded-2xl border border-neutral-200">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newPhoto = studioFilePreview || studioUrlInput.trim();
+                            if (!newPhoto) {
+                              showToast('Please select a photo, upload a file, or enter an image URL.');
+                              return;
+                            }
+                            applyImageToSlot(
+                              studioTargetSlot,
+                              newPhoto,
+                              studioThemeTag || undefined,
+                              studioCaption || undefined
+                            );
+                            handleSaveChanges(`Image for ${studioTargetSlot} updated and saved successfully!`);
+                            setStudioFilePreview(null);
+                            setStudioUrlInput('');
+                          }}
+                          disabled={!studioFilePreview && !studioUrlInput.trim()}
+                          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm ${
+                            studioFilePreview || studioUrlInput.trim()
+                              ? 'bg-[#155e3c] hover:bg-[#0f442b] text-white cursor-pointer active:scale-98'
+                              : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+                          }`}
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>Apply & Save This Image</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleSaveChanges()}
+                          className="px-5 py-2.5 bg-[#d4af37] hover:bg-[#b89324] text-[#0b1a12] text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-98"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-[#0b1a12]" />
+                          <span>Save All Changes Live</span>
+                        </button>
+                      </div>
+
+                      {getSlotActiveImage(studioTargetSlot) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            removeImageFromSlot(studioTargetSlot);
+                            setStudioFilePreview(null);
+                            setStudioUrlInput('');
+                            handleSaveChanges(`Image removed from ${studioTargetSlot}. Default artwork restored.`);
+                          }}
+                          className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-xl border border-red-200 transition-colors cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Revert Slot to Default</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1890,6 +2559,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           themeTag: 'Site Identity',
                           caption: 'Official brand crest',
                         },
+                        {
+                          id: 'whychoose',
+                          title: 'Why Choose Us Banner Graphic',
+                          category: 'branding' as const,
+                          categoryLabel: 'Why Choose Us',
+                          currentUrl: currentImageSettings.customImages?.['whychoose'],
+                          defaultFallback: 'Mosque Skyline Minarets Silhouette',
+                          themeTag: 'Spiritual Heritage',
+                          caption: 'Mosque minarets silhouette on Why Choose Us section',
+                        },
                         ...testimonials.map((t) => ({
                           id: t.id,
                           title: `${t.name} (${t.serviceCategory})`,
@@ -1915,6 +2594,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 'srv-6',
                                 'about',
                                 'logo',
+                                'whychoose',
                                 'test-1',
                                 'test-2',
                                 'test-3',
@@ -2009,29 +2689,48 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               </div>
                             </div>
 
+                            {/* Quick Select for Studio */}
+                            <div className="pt-2 flex items-center justify-between">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setStudioTargetSlot(slot.id);
+                                  setStudioFilePreview(null);
+                                  setStudioUrlInput(slot.currentUrl || '');
+                                  setStudioThemeTag(slot.themeTag || '');
+                                  setStudioCaption(slot.caption || '');
+                                  showToast(`Loaded "${slot.title}" into Studio above for editing.`);
+                                }}
+                                className="text-[10px] font-bold text-[#155e3c] hover:underline flex items-center gap-1 cursor-pointer"
+                              >
+                                <Edit2 className="w-2.5 h-2.5" />
+                                <span>Edit in Studio Box ↑</span>
+                              </button>
+                            </div>
+
                             {/* Action Buttons: ADD, REPLACE, REMOVE */}
-                            <div className="pt-4 border-t border-neutral-100 grid grid-cols-3 gap-2 text-xs">
-                              {/* 1. Add / Upload */}
+                            <div className="pt-3 border-t border-neutral-100 grid grid-cols-3 gap-2 text-xs">
+                              {/* 1. Add / Upload with Canvas Compression */}
                               <label className="cursor-pointer flex items-center justify-center gap-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-[#155e3c] font-bold rounded-lg border border-emerald-200 transition-colors text-[11px]">
                                 <Upload className="w-3 h-3 shrink-0" />
-                                <span>Add</span>
+                                <span>Upload</span>
                                 <input
                                   type="file"
                                   accept="image/*"
                                   className="hidden"
-                                  onChange={(e) => {
+                                  onChange={async (e) => {
                                     const file = e.target.files?.[0];
                                     if (!file) return;
-                                    const reader = new FileReader();
-                                    reader.onload = (ev) => {
+                                    const compressed = await processAndCompressFile(file);
+                                    if (compressed) {
                                       applyImageToSlot(
                                         slot.id,
-                                        ev.target?.result as string,
+                                        compressed,
                                         slot.themeTag,
                                         slot.caption
                                       );
-                                    };
-                                    reader.readAsDataURL(file);
+                                      handleSaveChanges(`Image for ${slot.title} uploaded & saved live!`);
+                                    }
                                   }}
                                 />
                               </label>
@@ -2049,7 +2748,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                     imageCaption: slot.caption,
                                   })
                                 }
-                                className="flex items-center justify-center gap-1 py-1.5 px-2 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded-lg shadow-2xs transition-colors text-[11px]"
+                                className="flex items-center justify-center gap-1 py-1.5 px-2 bg-[#155e3c] hover:bg-[#0f442b] text-white font-bold rounded-lg shadow-2xs transition-colors text-[11px] cursor-pointer"
                               >
                                 <RefreshCw className="w-3 h-3 shrink-0" />
                                 <span>Replace</span>
@@ -2058,11 +2757,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               {/* 3. Remove */}
                               <button
                                 type="button"
-                                onClick={() => removeImageFromSlot(slot.id)}
+                                onClick={() => {
+                                  removeImageFromSlot(slot.id);
+                                  handleSaveChanges(`Image removed from ${slot.title}. Default fallback restored.`);
+                                }}
                                 disabled={!hasActiveImage}
                                 className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg font-bold transition-colors text-[11px] ${
                                   hasActiveImage
-                                    ? 'bg-red-50 hover:bg-red-100 text-red-700'
+                                    ? 'bg-red-50 hover:bg-red-100 text-red-700 cursor-pointer'
                                     : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
                                 }`}
                                 title={hasActiveImage ? 'Remove image' : 'No image to remove'}
@@ -3617,6 +4319,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             preset.category,
                             preset.description
                           );
+                          handleSaveChanges(`Replaced image for "${replaceModalSlot.title}" with "${preset.title}" and saved live!`);
                           setReplaceModalSlot(null);
                         }}
                         className="group cursor-pointer rounded-xl border border-neutral-200 hover:border-emerald-500 hover:shadow-md transition-all overflow-hidden bg-white flex flex-col justify-between"
@@ -3665,6 +4368,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             sp.category,
                             sp.description
                           );
+                          handleSaveChanges(`Replaced image for "${replaceModalSlot.title}" with "${sp.title}" and saved live!`);
                           setReplaceModalSlot(null);
                         }}
                         className="group cursor-pointer rounded-xl border border-neutral-200 hover:border-emerald-500 hover:shadow-md transition-all overflow-hidden bg-white flex flex-col justify-between"
@@ -3708,6 +4412,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         key={av.id}
                         onClick={() => {
                           applyImageToSlot(replaceModalSlot.id, av.imageUrl);
+                          handleSaveChanges(`Replaced avatar for "${replaceModalSlot.title}" with "${av.name}" and saved live!`);
                           setReplaceModalSlot(null);
                         }}
                         className="group cursor-pointer rounded-xl border border-neutral-200 hover:border-emerald-500 p-2.5 text-center space-y-2 bg-white hover:shadow-md transition-all flex flex-col items-center"
@@ -3748,17 +4453,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
+                      disabled={isProcessingFile}
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          setReplaceUploadUrl(ev.target?.result as string);
-                        };
-                        reader.readAsDataURL(file);
+                        const compressed = await processAndCompressFile(file);
+                        if (compressed) {
+                          setReplaceUploadUrl(compressed);
+                        }
                       }}
                       className="text-xs text-neutral-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#155e3c] file:text-white hover:file:bg-[#0f442b] cursor-pointer"
                     />
+                    {isProcessingFile && (
+                      <p className="text-xs text-emerald-700 font-semibold mt-2 animate-pulse">
+                        Optimizing and compressing photo for web...
+                      </p>
+                    )}
                   </div>
 
                   {replaceUploadUrl && (
@@ -3838,7 +4548,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   setReplaceModalSlot(null);
                   setReplaceUploadUrl('');
                 }}
-                className="px-4 py-2 text-xs font-bold text-neutral-600 hover:text-neutral-900"
+                className="px-4 py-2 text-xs font-bold text-neutral-600 hover:text-neutral-900 cursor-pointer"
               >
                 Cancel
               </button>
@@ -3846,7 +4556,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {(replaceModalTab === 'upload' || replaceModalTab === 'url') && (
                 <button
                   type="button"
-                  disabled={!replaceUploadUrl.trim()}
+                  disabled={!replaceUploadUrl.trim() || isProcessingFile}
                   onClick={() => {
                     if (replaceUploadUrl.trim()) {
                       applyImageToSlot(
@@ -3855,18 +4565,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         replaceCustomTag || replaceModalSlot.coupleThemeTag,
                         replaceCustomCaption || replaceModalSlot.imageCaption
                       );
+                      handleSaveChanges(`Image for "${replaceModalSlot.title}" replaced & saved live!`);
                       setReplaceModalSlot(null);
                       setReplaceUploadUrl('');
+                      setReplaceCustomTag('');
+                      setReplaceCustomCaption('');
                     }
                   }}
-                  className={`px-5 py-2 text-xs font-bold rounded-xl flex items-center gap-2 ${
-                    replaceUploadUrl.trim()
-                      ? 'bg-[#155e3c] hover:bg-[#0f442b] text-white shadow-md'
+                  className={`px-5 py-2 text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer shadow-sm transition-all ${
+                    replaceUploadUrl.trim() && !isProcessingFile
+                      ? 'bg-[#155e3c] hover:bg-[#0f442b] text-white active:scale-98'
                       : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
                   }`}
                 >
-                  <Check className="w-4 h-4" />
-                  <span>Confirm & Replace Image</span>
+                  <Save className="w-4 h-4 text-[#d4af37]" />
+                  <span>Confirm & Save Changes Live</span>
                 </button>
               )}
             </div>
@@ -3917,17 +4630,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
+                  disabled={isProcessingFile}
+                  onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                      setNewCustomSlotUrl(ev.target?.result as string);
-                    };
-                    reader.readAsDataURL(file);
+                    const compressed = await processAndCompressFile(file);
+                    if (compressed) {
+                      setNewCustomSlotUrl(compressed);
+                    }
                   }}
                   className="w-full text-xs text-neutral-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-[#155e3c]"
                 />
+                {isProcessingFile && (
+                  <p className="text-[11px] text-emerald-700 font-semibold mt-1 animate-pulse">
+                    Compressing photo for instant web load...
+                  </p>
+                )}
               </div>
 
               {newCustomSlotUrl && (
@@ -3941,28 +4659,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <button
                 type="button"
                 onClick={() => setShowAddCustomSlotModal(false)}
-                className="px-4 py-2 text-xs font-bold text-neutral-600"
+                className="px-4 py-2 text-xs font-bold text-neutral-600 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                disabled={!newCustomSlotKey.trim() || !newCustomSlotUrl.trim()}
+                disabled={!newCustomSlotKey.trim() || !newCustomSlotUrl.trim() || isProcessingFile}
                 onClick={() => {
                   if (newCustomSlotKey.trim() && newCustomSlotUrl.trim()) {
                     applyImageToSlot(newCustomSlotKey.trim(), newCustomSlotUrl.trim());
+                    handleSaveChanges(`Custom image slot "${newCustomSlotKey}" added & saved live!`);
                     setShowAddCustomSlotModal(false);
                     setNewCustomSlotKey('');
                     setNewCustomSlotUrl('');
                   }
                 }}
-                className={`px-4 py-2 text-xs font-bold rounded-xl ${
-                  newCustomSlotKey.trim() && newCustomSlotUrl.trim()
-                    ? 'bg-[#155e3c] text-white hover:bg-[#0f442b]'
+                className={`px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm transition-all ${
+                  newCustomSlotKey.trim() && newCustomSlotUrl.trim() && !isProcessingFile
+                    ? 'bg-[#155e3c] text-white hover:bg-[#0f442b] active:scale-98'
                     : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
                 }`}
               >
-                Add Image Slot
+                <Save className="w-3.5 h-3.5 text-[#d4af37]" />
+                <span>Add & Save Slot</span>
               </button>
             </div>
           </div>

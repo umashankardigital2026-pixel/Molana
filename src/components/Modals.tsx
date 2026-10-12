@@ -52,7 +52,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
               <div>
                 <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-[#fde047] border border-[#d4af37]/40 shadow-xs inline-flex items-center gap-1">
                   <Heart className="w-3 h-3 text-rose-400 fill-rose-400/40" />
-                  <span>{service.coupleThemeTag || 'Roohani Couple Guidance'}</span>
+                  <span>{service.coupleThemeTag || 'Spiritual Couple Guidance'}</span>
                 </span>
                 {service.imageCaption && (
                   <p className="text-xs text-white/95 mt-1 font-medium drop-shadow-xs italic">
@@ -70,7 +70,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           <div className="space-y-2">
             <h4 className="font-bold text-sm text-[#112417] uppercase tracking-wider flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-[#155e3c]" />
-              <span>Tafseel & Sharai Rehnumai (Overview)</span>
+              <span>Spiritual Overview & Sacred Guidance</span>
             </h4>
             <p className="text-sm text-neutral-700 leading-relaxed bg-[#f8faf9] p-4 rounded-xl border border-neutral-200/60">
               {service.fullDescription}
@@ -81,7 +81,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           <div className="space-y-3">
             <h4 className="font-bold text-sm text-[#112417] uppercase tracking-wider flex items-center gap-2">
               <Heart className="w-4 h-4 text-[#155e3c]" />
-              <span>Khaas Fawaid & Barkat (Spiritual Benefits)</span>
+              <span>Key Spiritual Benefits & Blessings</span>
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {service.spiritualBenefits.map((benefit, i) => (
@@ -97,7 +97,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           {service.recommendedWazifa && (
             <div className="p-4 bg-amber-50/80 rounded-2xl border border-amber-200 space-y-1">
               <h5 className="font-bold text-xs text-amber-900 uppercase tracking-wide">
-                ✦ Maulana Sahab Ka Mashwara & Zikr
+                ✦ Maulana Shamsuddin's Spiritual Counsel & Supplication
               </h5>
               <p className="text-xs text-amber-950 font-medium">
                 {service.recommendedWazifa}
@@ -108,7 +108,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           {/* Process / Steps */}
           <div className="space-y-2">
             <h4 className="font-bold text-xs uppercase tracking-wider text-neutral-500">
-              Rehnumai Paane Ka Amal
+              Step-by-Step Consultation Procedure
             </h4>
             <ol className="space-y-1.5 list-decimal list-inside text-xs text-neutral-600">
               {service.processSteps.map((step, idx) => (

@@ -1,5 +1,19 @@
 import React, { useState } from 'react';
-import { Shield, LayoutDashboard, Image as ImageIcon, Puzzle, LogOut, ChevronUp, ChevronDown, Bell, Eye, KeyRound } from 'lucide-react';
+import {
+  Shield,
+  LayoutDashboard,
+  Image as ImageIcon,
+  Puzzle,
+  LogOut,
+  ChevronUp,
+  ChevronDown,
+  Bell,
+  Eye,
+  KeyRound,
+  Camera,
+  Save,
+  CheckCircle2,
+} from 'lucide-react';
 import { EnquiryItem } from '../../types';
 
 interface AdminQuickBarProps {
@@ -9,6 +23,7 @@ interface AdminQuickBarProps {
   enquiries: EnquiryItem[];
   showAllImages: boolean;
   onToggleImages: () => void;
+  onSaveChanges?: () => void;
 }
 
 export const AdminQuickBar: React.FC<AdminQuickBarProps> = ({
@@ -18,12 +33,22 @@ export const AdminQuickBar: React.FC<AdminQuickBarProps> = ({
   enquiries,
   showAllImages,
   onToggleImages,
+  onSaveChanges,
 }) => {
   const [isMinimized, setIsMinimized] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
 
   if (!isAuthenticated) return null;
 
   const newCount = enquiries.filter((e) => e.status === 'new').length;
+
+  const handleSaveClick = () => {
+    if (onSaveChanges) {
+      onSaveChanges();
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 3000);
+    }
+  };
 
   return (
     <div
@@ -53,6 +78,36 @@ export const AdminQuickBar: React.FC<AdminQuickBarProps> = ({
             <Shield className="w-3.5 h-3.5 text-[#d4af37]" />
             <span className="hidden sm:inline">Admin Mode</span>
           </div>
+
+          {/* Prominent Save Changes Button */}
+          {onSaveChanges && (
+            <button
+              onClick={handleSaveClick}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                justSaved
+                  ? 'bg-emerald-400 text-[#071a10] ring-2 ring-white scale-102 font-extrabold'
+                  : 'bg-[#d4af37] hover:bg-[#b89324] text-[#0b1a12] active:scale-95'
+              }`}
+              title="Save all changes to the live website"
+            >
+              {justSaved ? (
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#071a10]" />
+              ) : (
+                <Save className="w-3.5 h-3.5 text-[#0b1a12]" />
+              )}
+              <span>{justSaved ? 'Saved Live!' : 'Save Changes'}</span>
+            </button>
+          )}
+
+          {/* Add / Change Images Studio Quick Link */}
+          <button
+            onClick={() => onOpenAdmin('images')}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold border border-emerald-400/40 shadow-xs transition-all cursor-pointer"
+            title="Open Add or Change Website Images Studio"
+          >
+            <Camera className="w-3.5 h-3.5 text-[#fde047]" />
+            <span>Change Images</span>
+          </button>
 
           {/* New Enquiries Counter */}
           <button
@@ -91,10 +146,10 @@ export const AdminQuickBar: React.FC<AdminQuickBarProps> = ({
           {/* Open Full Admin Portal */}
           <button
             onClick={() => onOpenAdmin('dashboard')}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#d4af37] hover:bg-[#b89324] text-[#0b1a12] text-xs font-bold shadow-xs transition-all"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-neutral-200 text-xs font-bold shadow-xs transition-all"
             title="Open Admin Dashboard"
           >
-            <LayoutDashboard className="w-3.5 h-3.5" />
+            <LayoutDashboard className="w-3.5 h-3.5 text-[#d4af37]" />
             <span>Dashboard</span>
           </button>
 

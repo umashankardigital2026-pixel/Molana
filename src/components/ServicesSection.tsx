@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, Sparkles, Heart } from 'lucide-react';
+import { ArrowRight, Sparkles, Heart, Camera } from 'lucide-react';
 import { ServiceItem, ImageSettings } from '../types';
 import {
   IslamicDivider,
@@ -15,6 +15,8 @@ interface ServicesSectionProps {
   services: ServiceItem[];
   imageSettings?: ImageSettings;
   onSelectService: (service: ServiceItem) => void;
+  isAdminAuthenticated?: boolean;
+  onOpenImageManager?: (slotId?: string) => void;
 }
 
 const ServiceCardArtwork: React.FC<{
@@ -68,7 +70,7 @@ const ServiceCardArtwork: React.FC<{
             <span>{service.coupleThemeTag || 'Couple Guidance'}</span>
           </span>
           <span className="text-[10px] text-emerald-100 bg-[#155e3c]/85 backdrop-blur-xs px-2.5 py-0.5 rounded-full font-semibold border border-emerald-500/30 shadow-sm">
-            Sharai Amal
+            Spiritual Care
           </span>
         </div>
       </div>
@@ -94,6 +96,8 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
   services,
   imageSettings,
   onSelectService,
+  isAdminAuthenticated,
+  onOpenImageManager,
 }) => {
   const activeServices = services.filter((s) => s.isActive).sort((a, b) => a.displayOrder - b.displayOrder);
 
@@ -107,14 +111,14 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-14 space-y-2">
           {/* Islamic Ornamental Flourish with badge */}
-          <IslamicDivider label="Hamara Khas Amal" />
+          <IslamicDivider label="Sacred Spiritual Supplications" />
 
           <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-[#112417] tracking-tight">
             Our Services
           </h2>
 
           <p className="text-sm sm:text-base text-neutral-600 font-medium">
-            Har mushkil ka hal, har dua ka asar – Maulana Shamsuddin ke roohani amal aur couple rehnumai ke saath.
+            Spiritual solutions for life's challenges and relationship harmony – grounded in authentic prayer and moral guidance with Maulana Shamsuddin.
           </p>
         </div>
 
@@ -123,8 +127,21 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
           {activeServices.map((service) => (
             <div
               key={service.id}
-              className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden group hover:-translate-y-1"
+              className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden group hover:-translate-y-1 relative"
             >
+              {/* Admin Change Photo Button */}
+              {isAdminAuthenticated && (
+                <button
+                  type="button"
+                  onClick={() => onOpenImageManager?.(service.id)}
+                  className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1 bg-[#0b1a12]/85 hover:bg-[#155e3c] text-[#fde047] text-[11px] font-bold rounded-lg border border-[#d4af37]/60 shadow-md backdrop-blur-xs flex items-center gap-1 cursor-pointer transition-all hover:scale-105"
+                  title={`Change Photo for ${service.title}`}
+                >
+                  <Camera className="w-3 h-3 text-[#d4af37]" />
+                  <span>Change Photo</span>
+                </button>
+              )}
+
               {/* Card Artwork / Image Container or Clean Banner */}
               {showImages ? (
                 <div className="relative overflow-hidden">
@@ -136,7 +153,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="text-[#fde047]">✦</span>
                     <span className="text-xs uppercase font-bold tracking-wider text-[#d4af37]">
-                      {service.coupleThemeTag || 'Sharai Amal'}
+                      {service.coupleThemeTag || 'Spiritual Healing'}
                     </span>
                   </div>
                   <Sparkles className="w-4 h-4 text-[#fde047]/80" />

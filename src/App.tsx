@@ -15,6 +15,7 @@ import {
   WebsiteContent,
   GeneralSettings,
 } from './types';
+import { safeSaveToLocalStorage } from './utils/imageHelper';
 import { Header } from './components/Header';
 import { HeroSlider } from './components/HeroSlider';
 import { ServicesSection } from './components/ServicesSection';
@@ -33,17 +34,27 @@ import { AdminLoginModal } from './components/admin/AdminLoginModal';
 import { AdminQuickBar } from './components/admin/AdminQuickBar';
 
 export default function App() {
-  const isMigrated = localStorage.getItem('ms_content_locale') === 'v2_en';
-
   // Load initial state with localStorage support for Admin live editing
   const [slides, setSlides] = useState<SliderSlide[]>(() => {
-    if (!isMigrated) return INITIAL_SLIDES;
     const saved = localStorage.getItem('ms_slides');
-    return saved ? JSON.parse(saved) : INITIAL_SLIDES;
+    if (!saved) return INITIAL_SLIDES;
+    try {
+      const parsed: SliderSlide[] = JSON.parse(saved);
+      return parsed.map((item) => {
+        const initial = INITIAL_SLIDES.find((i) => i.id === item.id);
+        if (!initial) return item;
+        return {
+          ...initial,
+          ...item,
+          imageUrl: item.imageUrl !== undefined ? item.imageUrl : initial.imageUrl,
+        };
+      });
+    } catch {
+      return INITIAL_SLIDES;
+    }
   });
 
   const [services, setServices] = useState<ServiceItem[]>(() => {
-    if (!isMigrated) return INITIAL_SERVICES;
     const saved = localStorage.getItem('ms_services');
     if (!saved) return INITIAL_SERVICES;
     try {
@@ -54,9 +65,9 @@ export default function App() {
         return {
           ...initial,
           ...item,
-          imageUrl: item.imageUrl || initial.imageUrl,
-          coupleThemeTag: item.coupleThemeTag || initial.coupleThemeTag,
-          imageCaption: item.imageCaption || initial.imageCaption,
+          imageUrl: item.imageUrl !== undefined ? item.imageUrl : initial.imageUrl,
+          coupleThemeTag: item.coupleThemeTag !== undefined ? item.coupleThemeTag : initial.coupleThemeTag,
+          imageCaption: item.imageCaption !== undefined ? item.imageCaption : initial.imageCaption,
         };
       });
     } catch {
@@ -65,56 +76,103 @@ export default function App() {
   });
 
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>(() => {
-    if (!isMigrated) return INITIAL_TESTIMONIALS;
     const saved = localStorage.getItem('ms_testimonials');
-    return saved ? JSON.parse(saved) : INITIAL_TESTIMONIALS;
+    if (!saved) return INITIAL_TESTIMONIALS;
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return INITIAL_TESTIMONIALS;
+    }
   });
 
   const [enquiries, setEnquiries] = useState<EnquiryItem[]>(() => {
     const saved = localStorage.getItem('ms_enquiries');
-    return saved ? JSON.parse(saved) : INITIAL_ENQUIRIES;
+    if (!saved) return INITIAL_ENQUIRIES;
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return INITIAL_ENQUIRIES;
+    }
   });
 
   const [content, setContent] = useState<WebsiteContent>(() => {
-    if (!isMigrated) return INITIAL_CONTENT;
     const saved = localStorage.getItem('ms_content');
-    return saved ? JSON.parse(saved) : INITIAL_CONTENT;
+    if (!saved) return INITIAL_CONTENT;
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return INITIAL_CONTENT;
+    }
   });
 
   const [settings, setSettings] = useState<GeneralSettings>(() => {
-    if (!isMigrated) return INITIAL_SETTINGS;
     const saved = localStorage.getItem('ms_settings');
-    return saved ? JSON.parse(saved) : INITIAL_SETTINGS;
+    if (!saved) return INITIAL_SETTINGS;
+    try {
+      const parsed = JSON.parse(saved);
+      return {
+        ...INITIAL_SETTINGS,
+        ...parsed,
+        imageSettings: {
+          ...INITIAL_SETTINGS.imageSettings,
+          ...(parsed.imageSettings || {}),
+          customImages: {
+            ...(INITIAL_SETTINGS.imageSettings?.customImages || {}),
+            ...(parsed.imageSettings?.customImages || {}),
+          },
+        },
+      };
+    } catch {
+      return INITIAL_SETTINGS;
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('ms_content_locale', 'v2_en');
+    try {
+      localStorage.setItem('ms_content_locale', 'v2_en');
+    } catch (e) {
+      console.warn('LocalStorage error:', e);
+    }
   }, []);
 
-  // Sync to localStorage
+  // Safe sync to localStorage with quota protection and fallback
   useEffect(() => {
-    localStorage.setItem('ms_slides', JSON.stringify(slides));
+    safeSaveToLocalStorage('ms_slides', slides);
   }, [slides]);
 
   useEffect(() => {
-    localStorage.setItem('ms_services', JSON.stringify(services));
+    safeSaveToLocalStorage('ms_services', services);
   }, [services]);
 
   useEffect(() => {
-    localStorage.setItem('ms_testimonials', JSON.stringify(testimonials));
+    safeSaveToLocalStorage('ms_testimonials', testimonials);
   }, [testimonials]);
 
   useEffect(() => {
-    localStorage.setItem('ms_enquiries', JSON.stringify(enquiries));
+    safeSaveToLocalStorage('ms_enquiries', enquiries);
   }, [enquiries]);
 
   useEffect(() => {
-    localStorage.setItem('ms_content', JSON.stringify(content));
+    safeSaveToLocalStorage('ms_content', content);
   }, [content]);
 
   useEffect(() => {
-    localStorage.setItem('ms_settings', JSON.stringify(settings));
+    safeSaveToLocalStorage('ms_settings', settings);
   }, [settings]);
+
+  // Global manual save function that commits all state and updates timestamp
+  const handleManualSaveAll = () => {
+    safeSaveToLocalStorage('ms_slides', slides);
+    safeSaveToLocalStorage('ms_services', services);
+    safeSaveToLocalStorage('ms_testimonials', testimonials);
+    safeSaveToLocalStorage('ms_enquiries', enquiries);
+    safeSaveToLocalStorage('ms_content', content);
+    safeSaveToLocalStorage('ms_settings', settings);
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    try {
+      localStorage.setItem('ms_last_saved_time', timeStr);
+    } catch {}
+  };
 
   // Modals & UI States
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
@@ -281,6 +339,11 @@ export default function App() {
         <HeroSlider
           slides={slides}
           imageSettings={settings.imageSettings}
+          isAdminAuthenticated={isAdminAuthenticated}
+          onOpenImageManager={(slotId) => {
+            setAdminInitialTab('images');
+            setIsAdminOpen(true);
+          }}
           onOpenConsultation={(svc) => {
             if (svc) setPrefilledServiceConsultation(svc);
             scrollToSection('contact');
@@ -291,6 +354,11 @@ export default function App() {
         <ServicesSection
           services={services}
           imageSettings={settings.imageSettings}
+          isAdminAuthenticated={isAdminAuthenticated}
+          onOpenImageManager={(slotId) => {
+            setAdminInitialTab('images');
+            setIsAdminOpen(true);
+          }}
           onSelectService={(service) => setSelectedService(service)}
         />
 
@@ -298,6 +366,11 @@ export default function App() {
         <AboutSection
           content={content}
           settings={settings}
+          isAdminAuthenticated={isAdminAuthenticated}
+          onOpenImageManager={(slotId) => {
+            setAdminInitialTab('images');
+            setIsAdminOpen(true);
+          }}
           onOpenConsultation={() => scrollToSection('contact')}
         />
 
@@ -394,6 +467,7 @@ Peace and goodwill to all seekers. Spiritual supplications, guidance, and prayer
         enquiries={enquiries}
         showAllImages={settings.imageSettings?.showAllImages ?? true}
         onToggleImages={handleToggleAllImages}
+        onSaveChanges={handleManualSaveAll}
       />
 
       {/* Admin Authentication Login Modal */}

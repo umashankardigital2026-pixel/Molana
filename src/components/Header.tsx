@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, MessageCircle, Menu, X, Lock, Shield, LogOut, KeyRound } from 'lucide-react';
+import { Phone, MessageCircle, Menu, X, Lock, Shield, LogOut, KeyRound, Camera } from 'lucide-react';
 import { MosqueLogoIcon } from './IslamicArt';
 import { GeneralSettings } from '../types';
 
@@ -102,6 +102,14 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="flex items-center pl-1 border-l border-white/10">
               {isAdminAuthenticated ? (
                 <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => onOpenAdmin?.('images')}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-emerald-800/90 hover:bg-emerald-700 text-[11px] text-[#fef08a] border border-emerald-400/40 transition-colors cursor-pointer"
+                    title="Add or Change Website Images"
+                  >
+                    <Camera className="w-3 h-3 text-[#d4af37]" />
+                    <span>Change Images</span>
+                  </button>
                   <button
                     onClick={() => onOpenAdmin?.('dashboard')}
                     className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-900/90 hover:bg-emerald-800 text-[11px] text-[#fef08a] border border-emerald-500/40 transition-colors cursor-pointer"
@@ -259,7 +267,17 @@ export const Header: React.FC<HeaderProps> = ({
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      onOpenAdmin?.();
+                      onOpenAdmin?.('images');
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-bold text-[#155e3c] hover:underline"
+                  >
+                    <Camera className="w-3.5 h-3.5 text-[#d4af37]" />
+                    <span>Change Images</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenAdmin?.('dashboard');
                     }}
                     className="flex items-center gap-1.5 text-xs font-bold text-[#155e3c] hover:underline"
                   >
