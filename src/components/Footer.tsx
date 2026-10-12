@@ -48,7 +48,7 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
 
             <p className="text-xs text-neutral-400 leading-relaxed">
-              Allah Taala ke fazl o karam aur sharai rehnumai se insaniyat ki khidmat. Har musibat aur pareshani mein roohani mashwara aur dua.
+              Dedicated to serving humanity through compassionate spiritual guidance, authentic prayers, and thoughtful counsel in times of personal and family hardship.
             </p>
           </div>
 

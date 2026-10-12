@@ -3,15 +3,15 @@ import { SliderSlide, ServiceItem, TestimonialItem, EnquiryItem, WebsiteContent,
 export const INITIAL_SLIDES: SliderSlide[] = [
   {
     id: 'slide-1',
-    subheading: 'Mohabbat Mein Pareshani?',
-    heading: 'Dua & Wazifa For Love',
-    description: 'Kisi bhi wajah se toot rahi ho aapki mohabbat... Maulana Shamsuddin ki roohani madad se paayein apne pyaar, rishte aur sukoon ko wapas.',
-    highlightPills: ['Dua For Love', 'Wazifa For Love', 'Ruhani Ilm', 'Taweez'],
-    ctaPrimaryText: 'Abhi Contact Karein',
-    ctaPrimaryLink: 'https://wa.me/919928409129?text=Assalam%20o%20Alaikum%20Maulana%20Sahab,%20Mujhe%20Dua%20aur%20Wazifa%20ke%20bare%20mein%20mashwara%20chahiye',
+    subheading: 'Facing Hardships In Your Love Life?',
+    heading: 'Sacred Dua & Wazifa For Love',
+    description: 'If misunderstandings or emotional distance are weakening your bond, find healing and emotional peace through sincere spiritual guidance and prayer.',
+    highlightPills: ['Dua For Love', 'Wazifa For Love', 'Spiritual Wisdom', 'Sacred Blessings'],
+    ctaPrimaryText: 'Consult on WhatsApp',
+    ctaPrimaryLink: 'https://wa.me/919928409129?text=Hello%20Maulana%20Shamsuddin,%20I%20would%20like%20spiritual%20guidance%20and%20dua%20for%20my%20relationship',
     ctaSecondaryText: '+91 99284 09129',
     ctaSecondaryLink: 'tel:+919928409129',
-    scriptQuote: '“Pyar sirf dil se nahi, Rab ki raza se milta hai...”',
+    scriptQuote: '“True love flourishes through pure intention, patience, and divine grace...”',
     imageUrl: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1600&q=80',
     displayOrder: 1,
     isActive: true,
@@ -19,15 +19,15 @@ export const INITIAL_SLIDES: SliderSlide[] = [
   },
   {
     id: 'slide-2',
-    subheading: 'Rishte Aur Shaadi Se Judi Pareshani?',
-    heading: 'Love Marriage & Family Approval',
-    description: 'Apni situation share karein aur ruhani rehnumai paayein. Parivaar ko manane aur rishton mein barkat ke liye sharai dua aur amal.',
-    highlightPills: ['Manpasand Shaadi Dua', 'Waldain Ko Manana', 'Istikhara Rehnumai', 'Khandani Sukoon'],
-    ctaPrimaryText: 'WhatsApp Par Baat Karein',
-    ctaPrimaryLink: 'https://wa.me/919928409129?text=Assalam%20o%20Alaikum%20Maulana%20Sahab,%20Love%20Marriage%20se%20judi%20rehnumai%20chahiye',
+    subheading: 'Concerns Regarding Marriage & Family Approval?',
+    heading: 'Love Marriage & Family Harmony',
+    description: 'Share your circumstances in complete confidentiality and receive spiritual counseling, Istikhara guidance, and prayers to unite families with respect.',
+    highlightPills: ['Marriage Approval Dua', 'Family Reconciliation', 'Istikhara Guidance', 'Household Peace'],
+    ctaPrimaryText: 'Connect On WhatsApp',
+    ctaPrimaryLink: 'https://wa.me/919928409129?text=Hello%20Maulana%20Shamsuddin,%20I%20seek%20guidance%20regarding%20love%20marriage%20and%20family%20harmony',
     ctaSecondaryText: '+91 99284 09129',
     ctaSecondaryLink: 'tel:+919928409129',
-    scriptQuote: '“Har mushkil aasan hoti hai jab dua dil se nikalti hai...”',
+    scriptQuote: '“Every hardship eases when prayers are made with a sincere heart...”',
     imageUrl: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1600&q=80',
     displayOrder: 2,
     isActive: true,
@@ -35,15 +35,15 @@ export const INITIAL_SLIDES: SliderSlide[] = [
   },
   {
     id: 'slide-3',
-    subheading: 'Har Pareshani Mein Sabr Aur Dua',
-    heading: 'Personal Ruhani Guidance & Sukoon',
-    description: 'Dua, Islamic guidance aur ruhani mashware ke liye sampark karein. Zindagi ki uljhanon aur pareshaniyon ka sharai wazifa aur hal.',
-    highlightPills: ['Qurani Dua & Wazifa', 'Gharelu Klesh Khatam', 'Karobar Mein Barkat', 'Nafsani Sukoon'],
+    subheading: 'Patience & Devotion In Every Life Challenge',
+    heading: 'Personal Spiritual Guidance & Inner Peace',
+    description: 'Seek genuine spiritual counseling and authentic Quranic supplications to find clarity, resolve domestic friction, and regain peace of mind.',
+    highlightPills: ['Quranic Supplications', 'Resolve Domestic Conflict', 'Career & Life Blessings', 'Peace of Mind'],
     ctaPrimaryText: 'Contact Maulana Shamsuddin',
-    ctaPrimaryLink: 'https://wa.me/919928409129?text=Assalam%20o%20Alaikum%20Maulana%20Sahab,%20Mujhe%20Personal%20Ruhani%20Guidance%20chahiye',
+    ctaPrimaryLink: 'https://wa.me/919928409129?text=Hello%20Maulana%20Shamsuddin,%20I%20seek%20personal%20spiritual%20guidance%20and%20counseling',
     ctaSecondaryText: '+91 99284 09129',
     ctaSecondaryLink: 'tel:+919928409129',
-    scriptQuote: '“Allah par yaqeen rakhiye, har andhere ke baad subah aati hai...”',
+    scriptQuote: '“Have faith in divine wisdom; after every hardship comes ease and renewed hope...”',
     imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1600&q=80',
     displayOrder: 3,
     isActive: true,
@@ -56,21 +56,21 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     id: 'srv-1',
     slug: 'dua-for-love',
     title: 'Dua For Love',
-    shortDescription: 'Mohabbat ko mazboot banane aur dilon ko jodne ke liye khaas dua.',
-    fullDescription: 'Mohabbat mein aapsi ranjish, galatfehmi ya dooriyan paida ho gayi hon to Qurani duaon aur roohani amal se dilon mein mohabbat aur narmi paida ki ja sakti hai. Maulana Shamsuddin aapki shakhsi halat ko samajhkar munasib sharai dua tajweez karte hain.',
+    shortDescription: 'Sacred supplications and Quranic prayers to mend hearts, resolve misunderstandings, and strengthen loving bonds.',
+    fullDescription: 'When relationships experience emotional distance, misunderstandings, or bitter grief, sincere Quranic prayers and ethical spiritual counseling help restore affection and tenderness between partners. Maulana Shamsuddin provides personalized guidance tailored to your specific situation.',
     spiritualBenefits: [
-      'Dilon mein muhabbat aur narmi paida karna',
-      'Dooriyan aur bewajah narazgi khatam karna',
-      'Ek doosre ke liye jazbaat mein barkat',
-      'Rishte mein hamesha ke liye sukoon aur sachhai'
+      'Cultivate mutual love, understanding, and tenderness',
+      'Dissolve unnecessary misunderstandings and estrangement',
+      'Deepen emotional commitment and mutual respect',
+      'Establish lasting tranquility and honesty within the relationship'
     ],
     processSteps: [
-      'Apni pareshani aur halat ki mukammal tafseel batayein',
-      'Maulana Sahab aapki situation ke mutabiq sharai dua tajweez karenge',
-      'Pakeezgi aur sharait ke saath dua aur istighfar ada karein',
-      'Nateeje ke liye sabr aur Allah par mukammal yaqeen rakhein'
+      'Share your relationship concerns in strict confidence',
+      'Receive personalized guidance and Quranic supplications tailored to your need',
+      'Perform the recommended prayers with cleanliness and sincere devotion',
+      'Maintain patience, good character, and trust in divine wisdom'
     ],
-    recommendedWazifa: 'Surah Al-Furqan Ayat 74 ka tilawat aur Ya Wadoodo ka vird ba-wazu.',
+    recommendedWazifa: 'Recitation of Surah Al-Furqan (Verse 74) along with sincere invocation of Ya Wadood (The Loving).',
     iconType: 'dua',
     imageTag: 'couple_silhouette',
     imageUrl: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=800&q=80',
@@ -85,21 +85,21 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     id: 'srv-2',
     slug: 'wazifa-for-love',
     title: 'Wazifa For Love',
-    shortDescription: 'Pyar, rishte aur shaadi ke liye asardar wazifa.',
-    fullDescription: 'Wazifa ek mukaddas zikr hai jise mukarrar waqt aur pakeezah tareeqe se kiya jata hai. Agar aap apne mahboob se shadi ya rishte mein barkat chahte hain, toh Maulana Shamsuddin ke bataye asardar wazaif se dil ko chain aur faida milta hai.',
+    shortDescription: 'Structured spiritual recitations and supplications for love, matrimonial harmony, and mutual commitment.',
+    fullDescription: 'A Wazifa is a focused, disciplined spiritual recitation performed at consistent times with purity of intention. If you seek marriage or renewed affection with your intended partner, authentic spiritual recitations provide inner strength, peace, and divine favor.',
     spiritualBenefits: [
-      'Mohabbat aur nikah ke raste se rukawatein door karna',
-      'Dono dilon mein aapsi ham-aahangi aur izzat',
-      'Qalb ko sukoon aur rooh ko taqat',
-      'Rishte ko shariyet ke dayre mein mazboot karna'
+      'Clear emotional obstacles on the path to holy matrimony',
+      'Foster mutual harmony, empathy, and honor between both hearts',
+      'Instill serenity in the soul and courage in times of distress',
+      'Strengthen relationship values within sacred and ethical bounds'
     ],
     processSteps: [
-      'Maulana Shamsuddin se direct mashwara karein',
-      'Wazifa ki muddat (7, 11 ya 21 din) aur pabandi samjhein',
-      'Panch waqt ki namaz ke sath wazifa padhein',
-      'Niyyat bilkul saaf aur nek maqsad ke liye rakhein'
+      'Consult directly with Maulana Shamsuddin for personalized instruction',
+      'Follow the designated duration (7, 11, or 21 days) with consistency',
+      'Combine spiritual recitation with daily obligatory prayers and charity',
+      'Maintain pure, lawful intentions focused on honest companionship'
     ],
-    recommendedWazifa: 'Ya Jamiu Ya Wadoodo 1100 martaba baad namaz-e-Isha.',
+    recommendedWazifa: 'Invocation of Ya Jami Ya Wadood with pure heart following evening contemplation.',
     iconType: 'wazifa',
     imageTag: 'quran_rehal',
     imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80',
@@ -114,21 +114,21 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     id: 'srv-3',
     slug: 'ruhani-ilm',
     title: 'Ruhani Ilm',
-    shortDescription: 'Ruhani taqat se har mushkil ka hal, chahe wo kaisa bhi ho.',
-    fullDescription: 'Ruhani Ilm Allah Taala ke asma-ul-husna aur Qurani ayaton ka noorani ilm hai jiske zariye roohani uljhanon, dili pareshaniyon aur musibaton ka ilaaj kiya jata hai. Har shakhs ke liye makhsoos ruhani mashwara diya jata hai.',
+    shortDescription: 'Spiritual insight and counseling based on sacred verses to navigate lifes profound challenges.',
+    fullDescription: 'Spiritual knowledge (Ruhani Ilm) utilizes the sublime names of the Divine and sacred Quranic verses to bring light, solace, and spiritual clarity to troubled minds. Each individual receives tailored spiritual counsel, Istikhara guidance, and ethical life direction.',
     spiritualBenefits: [
-      'Manfi asraat aur dili ghabrahat se hifazat',
-      'Zehan aur rooh mein noorani sukoon ka ehsaas',
-      'Mushkil faislon mein sahih rehnumai aur istikhara',
-      'Imaan aur taqwa mein izafa'
+      'Protection against negative influences, spiritual anxiety, and despair',
+      'Profound sense of tranquility, peace of mind, and emotional balance',
+      'Clear direction in difficult decisions through prayer and Istikhara',
+      'Strengthening of personal faith, resilience, and spiritual connection'
     ],
     processSteps: [
-      'Apna naam aur pareshani confidential tareeqe se share karein',
-      'Istikhara aur roohani tashkhees ki jayegi',
-      'Makhsoos aamaal aur zikr ka nizaam diya jayega',
-      'Maulana sahab se waqtan-fawaqtan feedback lein'
+      'Share your name and concerns through secure, private consultation',
+      'Spiritual assessment and Istikhara evaluation conducted with care',
+      'Personalized daily routine of remembrance and prayer provided',
+      'Receive ongoing follow-up and ethical counseling sessions'
     ],
-    recommendedWazifa: 'Ayat-ul-Kursi aur Charon Qul subah o sham hifazat ke liye.',
+    recommendedWazifa: 'Morning and evening recitation of Ayat-ul-Kursi and the Four Qul chapters for protection.',
     iconType: 'ruhani',
     imageTag: 'hands_supplication',
     imageUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=800&q=80',
@@ -143,21 +143,21 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     id: 'srv-4',
     slug: 'taweez',
     title: 'Taweez',
-    shortDescription: 'Hifazat, pyar, rizaq aur sukoon ke liye khaas taweez.',
-    fullDescription: 'Qurani ayaton aur masnoon duaaon par mushtamil taweez roohani hifazat aur barkat ka zariya hota hai. Nazar-e-bad se bachne, ghar mein khushhali aur dilon ki narmi ke liye traditional sharai taweez tayyar kiya jata hai.',
+    shortDescription: 'Traditional spiritual prayers and Quranic verses inscribed for protection, blessings, and emotional safety.',
+    fullDescription: 'Composed of authentic Quranic verses and time-honored prayers of supplication, sacred Islamic guidance serves as a source of spiritual protection and divine grace. Prepared to shield against negative energies, promote household peace, and soften hardened hearts.',
     spiritualBenefits: [
-      'Nazar-e-bad aur bure asraat se mukammal bachao',
-      'Ghar aur karobar mein barkat o rizaq',
-      'Parivaar mein aapsi ittehad aur khushi',
-      'Khauf, dar aur be-chaini se azaadi'
+      'Protection from the evil eye, negative energies, and malevolence',
+      'Abundance of peace, blessings, and harmony in home and livelihood',
+      'Cultivation of unity, warmth, and mutual goodwill among family members',
+      'Freedom from persistent anxieties, restless dread, and distress'
     ],
     processSteps: [
-      'Apni pareshani ke bare mein call ya WhatsApp par batayein',
-      'Aapke liye makhsoos taweez ka amal kiya jayega',
-      'Taweez ke istemal aur ihtiyat ke usool samjhaye jayenge',
-      'Pakeezah kapde aur adab ke sath paas rakhein ya pehnein'
+      'Explain your situation via phone consultation or WhatsApp message',
+      'Tailored spiritual preparation aligned with sacred Islamic traditions',
+      'Instructions provided regarding reverent use and ethical care',
+      'Keep with purity of heart, good deeds, and regular prayers'
     ],
-    recommendedWazifa: 'Taweez ke sath rozana Surah Falaq aur Surah Naas ka wird zaroori hai.',
+    recommendedWazifa: 'Accompany with daily recitation of Surah Al-Falaq and Surah An-Nas.',
     iconType: 'taweez',
     imageTag: 'taweez_pendant',
     imageUrl: 'https://images.unsplash.com/photo-1494774157365-9e04c6720e47?auto=format&fit=crop&w=800&q=80',
@@ -172,21 +172,21 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     id: 'srv-5',
     slug: 'love-marriage',
     title: 'Love Marriage',
-    shortDescription: 'Love marriage ke liye khaas amal aur dua.',
-    fullDescription: 'Manpasand shadi mein aane wali rukawatein jaise waldain ki narazgi, samajik dushwariyaan ya rishte mein achanak doori ke liye Maulana Shamsuddin sharai dua aur roohani amal sikhate hain taaki rishta ba-izzat tareeqe se tay ho sake.',
+    shortDescription: 'Ethical spiritual counseling and prayers to resolve marital obstacles and unite families with honor.',
+    fullDescription: 'When pursuing marriage with someone you love faces resistance—such as parental disapproval, social pressure, or unexpected friction—Maulana Shamsuddin provides compassionate counsel and sacred prayers to resolve misunderstandings honorably.',
     spiritualBenefits: [
-      'Waldain aur rishtedaron ke dilon mein narmi aur razamandi',
-      'Nikah ke raste mein aane wali har rukawat ka sharai hal',
-      'Rishta mukammal izzat aur ahtram ke sath tay hona',
-      'Aane wali shadi-shuda zindagi mein barkat aur aman'
+      'Softening of hearts and gentle acceptance among parents and elders',
+      'Peaceful resolution of obstacles hindering lawful matrimonial union',
+      'Facilitating marriage solemnized with dignity, mutual respect, and joy',
+      'Invoking divine blessings and everlasting tranquility for future married life'
     ],
     processSteps: [
-      'Dono taraf ki pareshani aur halat ko share karein',
-      'Istikhara ke zariye rishte ki barkat maloom karein',
-      'Khaas dua aur wazifa ka amal 21 din ke liye karein',
-      'Waldain se ahtram aur muhabbat se baat karein'
+      'Provide a clear overview of the obstacles and family dynamics involved',
+      'Spiritual Istikhara conducted to discern goodness and blessings in the match',
+      'Engage in dedicated prayer and supplication over a 21-day period',
+      'Approach parents with utmost courtesy, gentleness, and filial respect'
     ],
-    recommendedWazifa: 'Surah Taha ki makhsoos aayat ka zikr har namaz ke baad.',
+    recommendedWazifa: 'Focused reflection on selected verses from Surah Ta-Ha following daily prayers.',
     iconType: 'marriage',
     imageTag: 'wedding_couple',
     imageUrl: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=800&q=80',
@@ -201,21 +201,21 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     id: 'srv-6',
     slug: 'relationship-problem',
     title: 'Relationship Problem',
-    shortDescription: 'Jeevan saathi, pati-patni ke jhagde, extra affair ka solution.',
-    fullDescription: 'Mian-biwi ke aapsi jhagde, bewajah shaq, baat cheet band hona ya teesre shakhs ki dakhal-andazi se ghar tootne ki naubat aa jati hai. Maulana Shamsuddin ke mashware aur dua se aapsi pyar aur ittefaq dobara qayam hota hai.',
+    shortDescription: 'Spiritual counseling to resolve spouse disputes, restore trust, and bring harmony back to your household.',
+    fullDescription: 'Marital friction, persistent suspicion, breakdown of communication, or third-party interference can endanger even the most dedicated bonds. Through spiritual counseling and sincere prayers, couples rebuild trust, rekindle love, and restore harmony.',
     spiritualBenefits: [
-      'Shauhar aur biwi ke dilon mein aapas ki mohabbat dobara zinda hona',
-      'Gharelu klesh aur ladai jhagde ka mukammal khatma',
-      'Bahar ke logon ki buri nazar ya asar se chhutkara',
-      'Bachhon aur ghar ke mahol mein aman o sukoon'
+      'Rekindling mutual warmth, empathy, and affection between husband and wife',
+      'Permanent cessation of domestic toxicity, frequent arguments, and bitterness',
+      'Shielding the home from outside malice, jealousy, and destructive gossip',
+      'Restoring a serene, secure environment for children and loved ones'
     ],
     processSteps: [
-      'Ghar aur rishte ki bunyadi pareshani batayein',
-      'Gopniya (100% confidential) mashwara aur counseling',
-      'Dua aur wazifa ka aasan tarika bataya jayega',
-      'Sabr aur husn-e-akhlaq ke sath amal jari rakhein'
+      'Describe the root challenges affecting the marriage or relationship',
+      'Participate in 100% confidential spiritual consultation and counseling',
+      'Implement straightforward daily prayers, mindfulness, and constructive actions',
+      'Practice patience, kind speech, and positive moral conduct consistently'
     ],
-    recommendedWazifa: 'Ya Lateefu Ya Wadoodo 100 martaba rozana shant mahol mein.',
+    recommendedWazifa: 'Daily peaceful invocation of Ya Lateef Ya Wadood in a quiet reflective atmosphere.',
     iconType: 'relationship',
     imageTag: 'broken_heart_mended',
     imageUrl: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?auto=format&fit=crop&w=800&q=80',
@@ -300,7 +300,7 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
     id: 'test-1',
     name: 'Ayesha Khan',
     location: 'Mumbai, Maharashtra',
-    quote: 'Maulana Shamsuddin sahab ki dua se meri love marriage ho gayi. Main hamesha unki duaon ke liye shukrguzaar hoon.',
+    quote: 'With the sincere prayers and guidance of Maulana Shamsuddin, our families happily accepted our marriage. I will always remain grateful for his compassionate counsel.',
     rating: 5,
     serviceCategory: 'Love Marriage Guidance',
     avatarType: 'couple',
@@ -312,7 +312,7 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
     id: 'test-2',
     name: 'Rizwan Ali',
     location: 'Hyderabad, Telangana',
-    quote: 'Mere relationship mein bahut problems thi. Wazifa aur taweez ke baad sab kuch sahi ho gaya. Allah unhe khush rakhe.',
+    quote: 'My relationship was experiencing severe communication breakdowns and conflict. Following the spiritual recitations and advice brought deep peace back to our home.',
     rating: 5,
     serviceCategory: 'Wazifa & Taweez',
     avatarType: 'man',
@@ -324,7 +324,7 @@ export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
     id: 'test-3',
     name: 'Sana Begum',
     location: 'Lucknow, Uttar Pradesh',
-    quote: 'Main bohot pareshan thi. Maulana sahab ne jo dua aur taweez diya, usse meri life mein sukoon wapas aa gaya.',
+    quote: 'I was overwhelmed by stress and despair. Maulana Sahabs respectful counseling and prayers helped me regain mental clarity and marital harmony.',
     rating: 5,
     serviceCategory: 'Relationship Solution',
     avatarType: 'woman',
@@ -361,7 +361,7 @@ export const SPIRITUAL_PHOTO_PRESETS = [
     title: 'Spiritual Islamic Rosary (Tasbih)',
     category: 'Wazifa & Zikr',
     imageUrl: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?auto=format&fit=crop&w=800&q=80',
-    description: 'Pakeezah wooden prayer beads for sacred zikr and peace'
+    description: 'Sacred wooden prayer beads for devotional remembrance and peace'
   }
 ];
 
@@ -406,7 +406,7 @@ export const INITIAL_ENQUIRIES: EnquiryItem[] = [
     serviceId: 'srv-1',
     serviceTitle: 'Dua For Love',
     consultationType: 'whatsapp',
-    message: 'Maulana Sahab, hamari aapsi narazgi door karne ke liye dua aur wazifa ka tareeqa bataiye.',
+    message: 'Respected Maulana, please advise on prayers and guidance to help resolve misunderstandings in our marriage.',
     hasConsent: true,
     status: 'new',
     createdAt: '2026-10-09 14:30',
@@ -419,46 +419,46 @@ export const INITIAL_ENQUIRIES: EnquiryItem[] = [
     serviceId: 'srv-5',
     serviceTitle: 'Love Marriage',
     consultationType: 'phone',
-    message: 'Waldain ko manane ke liye sharai istikhara aur dua ki zaroorat hai.',
+    message: 'I request Istikhara guidance and prayers to assist with family approval for my marriage.',
     hasConsent: true,
     status: 'contacted',
     createdAt: '2026-10-08 11:15',
-    adminNotes: 'Istikhara dua details sent via WhatsApp'
+    adminNotes: 'Istikhara prayer guidance shared via WhatsApp'
   }
 ];
 
 export const INITIAL_CONTENT: WebsiteContent = {
-  announcementText: 'Allah Par Yaqeen Rakhiye, Har Mushkil Ka Hal Hai...',
+  announcementText: 'Have faith in divine wisdom — every hardship has a path to peace and resolution...',
   brandName: 'Maulana Shamsuddin',
-  brandSubtitle: 'Dua | Wazifa | Ruhani Ilm | Taweez',
+  brandSubtitle: 'Dua | Wazifa | Spiritual Counseling | Sacred Prayers',
   aboutTitle: 'About Maulana Shamsuddin',
-  aboutDescription: 'Maulana Shamsuddin ek anubhavi aur mashhoor roohani alim hain, jinhe logon ki duaon ka jawab dene aur unki zindagi mein sukoon lane ke liye jaana jata hai. Wo sirf ilm aur dua par hi nahi, balki insaniyat aur rehmat par bhi bharosa rakhte hain. Maulana sahab ka maqsad hai ki har musibat mein ghire insaan ko Allah ki yaad aur roohani madad ke zariye raasta dikhaya jaaye.',
+  aboutDescription: 'Maulana Shamsuddin is a distinguished and compassionate Islamic spiritual scholar recognized for his decades of dedicated counseling, heartfelt prayers, and ethical guidance. Believing firmly in universal human dignity, mercy, and sincere devotion, Maulana Sahab strives to assist individuals experiencing emotional and familial distress through authentic prayer, spiritual reflection, and moral encouragement.',
   aboutHighlights: [
-    { title: '100% Confidential', desc: 'Aapki har baat aur guftagu bilkul raazdari mein rakhi jati hai.' },
-    { title: 'Real & Genuine Amal', desc: 'Sharai usoolon aur Quranic ayaton par mabni pakeezah amal.' },
-    { title: 'Jaldi Asar', desc: 'Ikhlas aur sachhi niyyat se dua ka asar mehsus hota hai.' },
-    { title: 'Har Dharm Ke Liye Seva', desc: 'Insaniyat sabse pehle hai, har zarooratmand ke liye dua aur rehnumai.' }
+    { title: '100% Confidential', desc: 'Every conversation and personal detail remains strictly private and protected.' },
+    { title: 'Genuine Spiritual Practice', desc: 'Grounding in noble Islamic principles, authentic Quranic verses, and ethical guidance.' },
+    { title: 'Compassionate Guidance', desc: 'Heartfelt empathy, sincere listening, and patient understanding for every seeker.' },
+    { title: 'Open To All People', desc: 'Serving humanity with compassion, respectful prayers, and universal goodwill.' }
   ],
   whyChooseUsTitle: 'Why Choose Us?',
-  whyChooseUsSubtitle: 'Aapki khushi aur sukoon hi hamari sabse badi kamyabi hai.',
+  whyChooseUsSubtitle: 'Your peace of mind and emotional well-being are our highest commitment.',
   whyChooseUsItems: [
-    { title: 'Roohani Ilm Mein Tajurba', desc: 'Barson ka roohani tajurba aur sharai qawaneen ki gehri samajh.', icon: 'tajurba' },
-    { title: '100% Gopniyata (Confidential)', desc: 'Aapki shakhsi zindagi ki har maloomat hamesha mehfooz.', icon: 'lock' },
-    { title: 'Asardar Amal Aur Dua', desc: 'Mukhlisana duaon aur zikr ke zariye dilon mein sukoon.', icon: 'dua' },
-    { title: 'Har Problem Ka Solution', desc: 'Mohabbat, rishte, gharelu uljhanein aur dil ka chain.', icon: 'solution' },
-    { title: 'Online / Phone Se Bhi Salah', desc: 'Ghar baithe Call ya WhatsApp par asaani se sampark.', icon: 'phone' }
+    { title: 'Decades of Spiritual Experience', desc: 'Years of profound spiritual wisdom, counseling expertise, and deep understanding of human relationships.', icon: 'tajurba' },
+    { title: '100% Confidential & Secure', desc: 'Your private matters, personal details, and concerns are kept entirely confidential.', icon: 'lock' },
+    { title: 'Heartfelt Prayers & Supplications', desc: 'Sincere devotion and Quranic remembrance aimed at bringing lasting peace to troubled hearts.', icon: 'dua' },
+    { title: 'Guidance For Diverse Challenges', desc: 'Compassionate assistance for relationship conflicts, marriage hurdles, and emotional distress.', icon: 'solution' },
+    { title: 'Direct Phone & WhatsApp Access', desc: 'Convenient consultation from anywhere via secure direct call or WhatsApp messaging.', icon: 'phone' }
   ],
   processTitle: 'Our Process',
-  processSubtitle: 'Ek asaan aur pur-sukoon tareeqa roohani rehnumai paane ka',
+  processSubtitle: 'A clear, respectful, and comforting process to receive authentic spiritual guidance',
   processSteps: [
-    { step: 1, title: 'Contact Us', desc: 'Call ya WhatsApp ke zariye Maulana Shamsuddin se sampark karein.' },
-    { step: 2, title: 'Share Your Concern', desc: 'Apni pareshani aur halat ko khulkar aur tasalli se batayein.' },
-    { step: 3, title: 'Receive Appropriate Guidance', desc: 'Aapki situation ke mutabiq munasib dua, wazifa ya mashwara lein.' },
-    { step: 4, title: 'Follow at Your Own Discretion', desc: 'Pakeezgi, sabr aur Allah par yaqeen ke sath hidayat par amal karein.' }
+    { step: 1, title: 'Reach Out', desc: 'Connect with Maulana Shamsuddin easily via direct phone call or WhatsApp message.' },
+    { step: 2, title: 'Share Your Concern', desc: 'Explain your personal circumstances and worries in complete trust and tranquility.' },
+    { step: 3, title: 'Receive Spiritual Guidance', desc: 'Receive tailored Quranic supplications, Istikhara insights, and compassionate advice.' },
+    { step: 4, title: 'Practice With Sincerity', desc: 'Follow the guidance with patience, moral integrity, cleanliness, and faith in divine grace.' }
   ],
-  ctaBannerTitle: 'Apni Problem Ka Hal Paaein',
-  ctaBannerSubtitle: 'Maulana Shamsuddin Se',
-  ctaBannerQuote: '“Dua, Wazifa, Taweez... Har Mushkil Ka Hal”'
+  ctaBannerTitle: 'Find Peace & Solution For Your Life Challenges',
+  ctaBannerSubtitle: 'With Maulana Shamsuddin',
+  ctaBannerQuote: '“Prayer, Patience, and Faith... A Path Toward Peace for Every Heart”'
 };
 
 export const INITIAL_SETTINGS: GeneralSettings = {
@@ -466,7 +466,7 @@ export const INITIAL_SETTINGS: GeneralSettings = {
   phoneNumber: '+919928409129',
   phoneDisplay: '+91 99284 09129',
   whatsappNumber: '919928409129',
-  whatsappMessage: 'Assalam o Alaikum Maulana Shamsuddin Sahab, mujhe roohani mashwara aur dua ke silsile mein baat karni hai.',
+  whatsappMessage: 'Hello Maulana Shamsuddin, I would like to seek spiritual guidance and prayer consultation regarding my situation.',
   emailAddress: 'contact@maulanashamsuddin.com',
   address: 'India',
   disclaimerText: 'Spiritual guidance and dua consultations are based on faith, personal prayer, and Islamic counseling practices. Results may vary according to faith, sabr, and divine will. We do not make misleading, unscientific, or guaranteed claims.',

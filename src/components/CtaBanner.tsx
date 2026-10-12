@@ -25,10 +25,10 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({ settings, onOpenConsultati
           {/* Left: Heading & Subheading */}
           <div className="space-y-1">
             <h3 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
-              Apni Problem Ka Hal Paaein
+              Find Peace & Spiritual Solutions
             </h3>
             <p className="font-heading text-xl sm:text-2xl text-[#f8d268] font-semibold">
-              Maulana Shamsuddin Se
+              With Maulana Shamsuddin
             </p>
           </div>
 
@@ -36,14 +36,14 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({ settings, onOpenConsultati
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             <a
               href={`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(
-                'Assalam o Alaikum Maulana Shamsuddin Sahab, mujhe mashwara chahiye.'
+                'Hello Maulana Shamsuddin, I would like to seek spiritual guidance.'
               )}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-[#f5b82e] hover:bg-[#e0a41d] text-[#112417] font-bold text-sm sm:text-base rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
             >
               <MessageCircle className="w-5 h-5 fill-current text-[#112417]" />
-              <span>Abhi Contact Kare</span>
+              <span>Contact On WhatsApp</span>
             </a>
 
             <a
@@ -58,8 +58,8 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({ settings, onOpenConsultati
           {/* Right: Golden Script Quote */}
           <div className="hidden lg:block text-right">
             <p className="font-script text-2xl sm:text-3xl text-[#fde047] leading-relaxed drop-shadow">
-              “Dua, Wazifa, Taweez... <br />
-              <span className="text-[#fef08a]">Har Mushkil Ka Hal”</span>
+              “Prayer, Devotion & Patience... <br />
+              <span className="text-[#fef08a]">A Path to Peace For Every Heart”</span>
             </p>
           </div>
         </div>

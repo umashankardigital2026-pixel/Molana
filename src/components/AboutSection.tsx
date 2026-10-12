@@ -50,16 +50,16 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
           ) : (
             <div className="lg:col-span-5 bg-gradient-to-br from-[#0c2617] to-[#155e3c] text-white p-8 rounded-3xl border border-[#d4af37]/40 shadow-xl space-y-4">
               <span className="text-xs uppercase font-bold tracking-widest text-[#d4af37]">
-                ✦ Ruhani Ilm & Barkat
+                ✦ Spiritual Wisdom & Divine Grace
               </span>
               <h3 className="font-heading text-2xl font-bold leading-snug text-[#fef08a]">
-                “Insaniyat Ki Khidmat Aur Allah Ki Raza”
+                “Serving Humanity & Sincere Devotion”
               </h3>
               <p className="text-xs sm:text-sm text-emerald-100 leading-relaxed">
-                Maulana Shamsuddin barson se logon ke dilon mein sukoon aur rishton mein mohabbat qayam karne ke liye sharai rehnumai faraham kar rahe hain.
+                Maulana Shamsuddin has provided compassionate counsel and sincere prayers for decades to bring peace to hearts and restore loving relationships.
               </p>
               <div className="pt-2 border-t border-white/10 text-xs text-neutral-300 font-mono">
-                Raabta: {settings.phoneDisplay}
+                Direct Contact: {settings.phoneDisplay}
               </div>
             </div>
           )}
@@ -109,7 +109,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
 
               <a
                 href={`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(
-                  'Assalam o Alaikum Maulana Shamsuddin Sahab, mujhe roohani rehnumai ke liye baat karni hai.'
+                  'Hello Maulana Shamsuddin, I would like to seek spiritual guidance and consultation.'
                 )}`}
                 target="_blank"
                 rel="noreferrer"

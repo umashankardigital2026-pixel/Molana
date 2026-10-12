@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, User, Eye, EyeOff, ShieldCheck, X, KeyRound, Sparkles } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, ShieldCheck, X, KeyRound, Sparkles, RotateCcw } from 'lucide-react';
 import { MosqueLogoIcon } from '../IslamicArt';
 
 interface AdminLoginModalProps {
@@ -15,11 +15,13 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
   onLoginSuccess,
   savedUsername = 'admin',
 }) => {
-  const [username, setUsername] = useState(savedUsername);
+  const activeCustomUser = localStorage.getItem('ms_admin_username') || savedUsername;
+  const [username, setUsername] = useState(activeCustomUser);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -27,12 +29,26 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMsg('');
     setIsLoading(true);
 
     setTimeout(() => {
-      // Validate credentials (default: admin / admin123 or stored custom)
-      const validUser = (username.trim().toLowerCase() === 'admin' || username.trim().toLowerCase() === 'maulana');
-      const validPass = password.trim() === 'admin123' || password.trim() === 'shamsuddin786' || password.trim() === 'admin';
+      // Validate credentials against custom stored password or default fallback
+      const storedPassword = localStorage.getItem('ms_admin_password') || 'admin123';
+      const storedUsername = localStorage.getItem('ms_admin_username') || 'admin';
+
+      const enteredUser = username.trim().toLowerCase();
+      const validUser =
+        enteredUser === storedUsername.toLowerCase() ||
+        enteredUser === 'admin' ||
+        enteredUser === 'maulana';
+
+      const enteredPass = password.trim();
+      const validPass =
+        enteredPass === storedPassword ||
+        enteredPass === 'admin123' ||
+        enteredPass === 'shamsuddin786' ||
+        enteredPass === 'admin';
 
       if (validUser && validPass) {
         if (rememberMe) {
@@ -45,16 +61,29 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
         onLoginSuccess();
       } else {
         setIsLoading(false);
-        setError('Galat Username ya Password. Default credentials use karein: admin / admin123');
+        setError('Invalid username or password. Default credentials: admin / admin123');
       }
-    }, 400);
+    }, 350);
   };
 
   const handleFillDemo = () => {
+    const currentPass = localStorage.getItem('ms_admin_password') || 'admin123';
+    const currentUser = localStorage.getItem('ms_admin_username') || 'admin';
+    setUsername(currentUser);
+    setPassword(currentPass);
+    setError('');
+  };
+
+  const handleResetPasswordToDefault = () => {
+    localStorage.removeItem('ms_admin_password');
+    localStorage.removeItem('ms_admin_username');
     setUsername('admin');
     setPassword('admin123');
     setError('');
+    setSuccessMsg('Password has been reset to default: admin123');
   };
+
+  const hasCustomPassword = Boolean(localStorage.getItem('ms_admin_password'));
 
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -87,11 +116,18 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
         </div>
 
         {/* Form Body */}
-        <div className="p-6 sm:p-7 space-y-5">
+        <div className="p-6 sm:p-7 space-y-4">
           {error && (
             <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium flex items-start gap-2">
-              <span className="text-red-500 font-bold">✕</span>
+              <span className="text-red-500 font-bold shrink-0">✕</span>
               <span>{error}</span>
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-medium flex items-start gap-2">
+              <span className="text-emerald-600 font-bold shrink-0">✓</span>
+              <span>{successMsg}</span>
             </div>
           )}
 
@@ -115,9 +151,16 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-neutral-700 mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-neutral-700">
+                  Password
+                </label>
+                {hasCustomPassword && (
+                  <span className="text-[10px] text-amber-700 font-medium bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                    Custom Password Active
+                  </span>
+                )}
+              </div>
               <div className="relative">
                 <KeyRound className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
@@ -131,7 +174,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 p-0.5"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 p-0.5 cursor-pointer"
                   aria-label="Toggle password visibility"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -153,11 +196,11 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
               <button
                 type="button"
                 onClick={handleFillDemo}
-                className="text-xs text-[#155e3c] hover:underline font-bold flex items-center gap-1"
-                title="Fill demo credentials"
+                className="text-xs text-[#155e3c] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                title="Fill credentials"
               >
                 <Sparkles className="w-3 h-3 text-[#d4af37]" />
-                <span>Auto-Fill Default</span>
+                <span>Auto-Fill</span>
               </button>
             </div>
 
@@ -171,10 +214,10 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
             </button>
           </form>
 
-          {/* Quick Info Box */}
-          <div className="p-3 bg-amber-50/80 border border-amber-200/60 rounded-xl text-[11px] text-amber-900 flex items-center justify-between">
+          {/* Quick Info Box & Reset to default option */}
+          <div className="p-3 bg-amber-50/80 border border-amber-200/60 rounded-xl text-[11px] text-amber-900 flex items-center justify-between flex-wrap gap-2">
             <div>
-              <span className="font-bold">Default Credentials:</span>{' '}
+              <span className="font-bold">Default:</span>{' '}
               <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-amber-200 text-neutral-800">
                 admin
               </span>{' '}
@@ -183,12 +226,17 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
                 admin123
               </span>
             </div>
-            <button
-              onClick={handleFillDemo}
-              className="text-[10px] font-bold text-[#155e3c] uppercase underline"
-            >
-              Use
-            </button>
+            {hasCustomPassword && (
+              <button
+                type="button"
+                onClick={handleResetPasswordToDefault}
+                className="text-[10px] font-bold text-red-700 hover:text-red-900 hover:underline flex items-center gap-1 cursor-pointer"
+                title="Reset custom password back to default"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset to Default</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

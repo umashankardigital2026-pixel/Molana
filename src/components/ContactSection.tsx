@@ -30,15 +30,15 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
     setErrorMsg('');
 
     if (!name.trim()) {
-      setErrorMsg('Kripya apna naam darj karein (Please enter your name).');
+      setErrorMsg('Please enter your full name.');
       return;
     }
     if (!phone.trim() || phone.replace(/\D/g, '').length < 10) {
-      setErrorMsg('Kripya valid 10-digit mobile number darj karein (Please enter a valid phone number).');
+      setErrorMsg('Please enter a valid 10-digit phone number.');
       return;
     }
     if (!hasConsent) {
-      setErrorMsg('Kripya gopniyata shartein (privacy consent) swikaar karein.');
+      setErrorMsg('Please accept the privacy policy to submit your enquiry.');
       return;
     }
 
@@ -85,10 +85,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                   Instant Reach
                 </span>
                 <h3 className="font-heading text-2xl font-bold">
-                  Bila-Jhijhak Sampark Karein
+                  Contact Without Hesitation
                 </h3>
                 <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
-                  Aapki har baat 100% confidential aur mehfooz rakhi jayegi. Maulana Shamsuddin se direct mashwara lene ke liye niche diye gaye button par click karein.
+                  Your conversation remains 100% confidential and protected. Click below to reach Maulana Shamsuddin directly.
                 </p>
               </div>
 
@@ -106,7 +106,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     </div>
                     <div>
                       <h4 className="font-bold text-sm">WhatsApp Chat</h4>
-                      <p className="text-xs text-emerald-200">Turant message bhejein</p>
+                      <p className="text-xs text-emerald-200">Send direct message</p>
                     </div>
                   </div>
                   <span className="text-xs font-semibold px-3 py-1 bg-white/10 rounded-full">
@@ -136,7 +136,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
               {/* Trust markers */}
               <div className="pt-4 border-t border-white/10 flex items-center gap-3 text-xs text-emerald-200/80">
                 <ShieldAlert className="w-4 h-4 text-[#d4af37] shrink-0" />
-                <span>100% Gopniya (Confidential). Koi fake ya unscientific daawa nahi kiya jata.</span>
+                <span>100% Confidential. No misleading or unscientific claims are made.</span>
               </div>
             </div>
           </div>
@@ -148,7 +148,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 Consultation Enquiry Form
               </h3>
               <p className="text-xs sm:text-sm text-neutral-600 mb-6">
-                Apni pareshani darj karein, Maulana Sahab ke daftar se jald hi aapse sampark kiya jayega.
+                Share your details; our office will connect with you promptly.
               </p>
 
               {submitted ? (
@@ -157,20 +157,20 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     <CheckCircle2 className="w-6 h-6" />
                   </div>
                   <h4 className="font-heading text-xl font-bold text-[#155e3c]">
-                    Shukriya! Aapki Enquiry Darj Kar Li Gayi Hai
+                    Thank You! Your Enquiry Has Been Received
                   </h4>
                   <p className="text-xs sm:text-sm text-neutral-700 max-w-md mx-auto">
-                    Maulana Shamsuddin aapse WhatsApp ya Phone par jald hi rabta karenge. Agar mamla behad zaroori hai toh turant WhatsApp karein.
+                    Maulana Shamsuddin or his assistant will connect with you shortly via WhatsApp or phone. If your matter is urgent, please message on WhatsApp directly.
                   </p>
                   <div className="pt-3">
                     <a
-                      href={`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent('Assalam o Alaikum Maulana Sahab, maine website par form submit kiya hai.')}`}
+                      href={`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent('Hello Maulana Shamsuddin, I have submitted an enquiry form on your website.')}`}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#155e3c] text-white rounded-full text-xs font-bold"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      <span>WhatsApp Par Turant Baat Karein</span>
+                      <span>Connect Immediately on WhatsApp</span>
                     </a>
                   </div>
                 </div>
@@ -271,7 +271,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       required
                     />
                     <label htmlFor="consent" className="text-xs text-neutral-600 leading-snug">
-                      Main Maulana Shamsuddin se roohani mashwara lene ke liye apni maloomat bhejne par razamand hoon aur meri gopniyata ka ahtram kiya jayega.
+                      I consent to submitting my details for spiritual consultation with Maulana Shamsuddin and understand that my privacy will be strictly respected.
                     </label>
                   </div>
 
@@ -281,7 +281,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-[#155e3c] hover:bg-[#0f462c] text-white font-bold text-sm sm:text-base rounded-full shadow-md hover:shadow-lg transition-all"
                     >
                       <Send className="w-4 h-4" />
-                      <span>Enquiry Submit Karein</span>
+                      <span>Submit Consultation Enquiry</span>
                     </button>
                   </div>
                 </form>

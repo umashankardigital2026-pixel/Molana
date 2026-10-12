@@ -33,13 +33,17 @@ import { AdminLoginModal } from './components/admin/AdminLoginModal';
 import { AdminQuickBar } from './components/admin/AdminQuickBar';
 
 export default function App() {
+  const isMigrated = localStorage.getItem('ms_content_locale') === 'v2_en';
+
   // Load initial state with localStorage support for Admin live editing
   const [slides, setSlides] = useState<SliderSlide[]>(() => {
+    if (!isMigrated) return INITIAL_SLIDES;
     const saved = localStorage.getItem('ms_slides');
     return saved ? JSON.parse(saved) : INITIAL_SLIDES;
   });
 
   const [services, setServices] = useState<ServiceItem[]>(() => {
+    if (!isMigrated) return INITIAL_SERVICES;
     const saved = localStorage.getItem('ms_services');
     if (!saved) return INITIAL_SERVICES;
     try {
@@ -61,6 +65,7 @@ export default function App() {
   });
 
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>(() => {
+    if (!isMigrated) return INITIAL_TESTIMONIALS;
     const saved = localStorage.getItem('ms_testimonials');
     return saved ? JSON.parse(saved) : INITIAL_TESTIMONIALS;
   });
@@ -71,14 +76,20 @@ export default function App() {
   });
 
   const [content, setContent] = useState<WebsiteContent>(() => {
+    if (!isMigrated) return INITIAL_CONTENT;
     const saved = localStorage.getItem('ms_content');
     return saved ? JSON.parse(saved) : INITIAL_CONTENT;
   });
 
   const [settings, setSettings] = useState<GeneralSettings>(() => {
+    if (!isMigrated) return INITIAL_SETTINGS;
     const saved = localStorage.getItem('ms_settings');
     return saved ? JSON.parse(saved) : INITIAL_SETTINGS;
   });
+
+  useEffect(() => {
+    localStorage.setItem('ms_content_locale', 'v2_en');
+  }, []);
 
   // Sync to localStorage
   useEffect(() => {
@@ -329,34 +340,34 @@ export default function App() {
         onOpenPrivacy={() =>
           setLegalModalState({
             isOpen: true,
-            title: 'Privacy Policy (Gopniyata Niti)',
-            content: `Aapki Shakhsi Maloomat Ki Hifazat:
+            title: 'Privacy Policy & Confidentiality',
+            content: `Protection of Your Personal & Spiritual Information:
 
-1. Hum aapki shakhsi jankari (naam, phone number, pareshani ki tafseel) ko 100% confidential aur mehfooz rakhte hain.
-2. Aapki koi bhi jankari kisi teesre shakhs ya public forum par zahir nahi ki jati.
-3. Form ke zariye bheja gaya data sirf Maulana Shamsuddin aur unke authorised muawin (assistant) tak mehdood rehta hai taaki aapse raabta kiya ja sake.
-4. Agar aap chahein toh kisi bhi waqt apna record delete karne ki darkhwast kar sakte hain.`,
+1. We safeguard all personal information (including your name, phone number, and private consultation details) with 100% strict confidentiality and digital privacy.
+2. Under no circumstances is your personal information shared with third parties, marketing agencies, or public forums.
+3. Information submitted through our consultation forms is accessed solely by Maulana Shamsuddin and his authorized assistants to facilitate your direct consultation.
+4. You may request the immediate deletion or removal of your contact details and enquiry records at any time.`,
           })
         }
         onOpenTerms={() =>
           setLegalModalState({
             isOpen: true,
-            title: 'Terms & Conditions (Shartein)',
-            content: `Sharai Mashwara & Service Shartein:
+            title: 'Terms & Conditions',
+            content: `Spiritual Consultation & Ethical Service Terms:
 
-1. Maulana Shamsuddin ki janib se pesh kiye jane wale aamaal, dua aur wazaif mukammal sharai aur roohani tareeqon par mabni hain.
-2. Har dua aur wazifa insaan ki sachhi niyyat, pakeezgi, sabr aur Allah Taala ki raza par munhasir hai.
-3. Hamari website par kisi bhi kism ka unscientific ya 100% guaranteed jadugari daawa nahi kiya jata. Dua mashwara aur roohani rehnumai ka zariya hai.
-4. Kisi bhi ghair-sharai ya na-jayez maqsad ke liye roohani rehnumai nahi di jati.`,
+1. All spiritual guidance, supplications, prayers, and wazaif offered by Maulana Shamsuddin are grounded in traditional, ethical, and lawful spiritual counseling practices.
+2. The outcome of any prayer or spiritual practice relies upon genuine sincerity, pure intention, moral patience, and divine wisdom.
+3. Our services and website make no misleading, unscientific, or guaranteed claims. Consultations serve as moral support, spiritual reflection, and faith-based guidance.
+4. Spiritual consultation is strictly denied for any unlawful, unethical, or harmful purposes.`,
           })
         }
         onOpenDisclaimer={() =>
           setLegalModalState({
             isOpen: true,
-            title: 'Disclaimer (Sharai Wazaahat)',
+            title: 'Spiritual Disclaimer',
             content: `${settings.disclaimerText}
 
-Sabka Bhala, Sabka Sukoon. Dua aur wazifa qalb ke itminaan aur roohani barkat ke liye sharai rehnumai hai.`,
+Peace and goodwill to all seekers. Spiritual supplications, guidance, and prayers serve to bring tranquility to the heart, inner fortitude, and divine grace.`,
           })
         }
       />

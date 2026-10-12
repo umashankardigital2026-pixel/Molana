@@ -125,14 +125,14 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           <div className="flex items-center gap-2">
             <a
               href={`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(
-                `Assalam o Alaikum Maulana Shamsuddin Sahab, mujhe "${service.title}" ke bare mein mashwara chahiye.`
+                `Hello Maulana Shamsuddin, I would like to seek spiritual consultation regarding "${service.title}".`
               )}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#155e3c] hover:bg-[#0f462c] text-white text-xs sm:text-sm font-bold rounded-full shadow-sm"
             >
               <MessageCircle className="w-4 h-4" />
-              <span>WhatsApp Par Baat Karein</span>
+              <span>Chat On WhatsApp</span>
             </a>
 
             <a

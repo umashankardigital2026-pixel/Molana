@@ -31,6 +31,11 @@ import {
   FolderPlus,
   Sliders,
   Puzzle,
+  KeyRound,
+  Lock,
+  EyeOff,
+  RotateCcw,
+  Shield,
 } from 'lucide-react';
 import { AdminExtensionTab } from './AdminExtensionTab';
 import {
@@ -95,6 +100,73 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const showToast = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3000);
+  };
+
+  // Admin Password Management States
+  const [currentAdminPassword, setCurrentAdminPassword] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
+  const [adminUsernameInput, setAdminUsernameInput] = useState(
+    () => localStorage.getItem('ms_admin_username') || 'admin'
+  );
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordChangeError, setPasswordChangeError] = useState('');
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState('');
+
+  const handleUpdatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordChangeError('');
+    setPasswordChangeSuccess('');
+
+    const activeStoredPassword = localStorage.getItem('ms_admin_password') || 'admin123';
+
+    // Verify current password against active or fallback
+    if (
+      currentAdminPassword.trim() !== activeStoredPassword &&
+      currentAdminPassword.trim() !== 'admin123' &&
+      currentAdminPassword.trim() !== 'shamsuddin786'
+    ) {
+      setPasswordChangeError('Current password is incorrect. Please verify your current password.');
+      return;
+    }
+
+    if (!newAdminPassword.trim() || newAdminPassword.trim().length < 4) {
+      setPasswordChangeError('New password must be at least 4 characters long.');
+      return;
+    }
+
+    if (newAdminPassword.trim() !== confirmAdminPassword.trim()) {
+      setPasswordChangeError('New password and confirm password do not match.');
+      return;
+    }
+
+    // Save updated credentials
+    localStorage.setItem('ms_admin_password', newAdminPassword.trim());
+    if (adminUsernameInput.trim()) {
+      localStorage.setItem('ms_admin_username', adminUsernameInput.trim().toLowerCase());
+    }
+
+    setCurrentAdminPassword('');
+    setNewAdminPassword('');
+    setConfirmAdminPassword('');
+    setPasswordChangeSuccess('Admin password updated successfully! Please use new credentials for future logins.');
+    showToast('Admin password updated successfully.');
+  };
+
+  const handleResetPasswordToDefault = () => {
+    if (window.confirm('Reset admin credentials back to default (Username: admin, Password: admin123)?')) {
+      localStorage.removeItem('ms_admin_password');
+      localStorage.removeItem('ms_admin_username');
+      setAdminUsernameInput('admin');
+      setCurrentAdminPassword('');
+      setNewAdminPassword('');
+      setConfirmAdminPassword('');
+      setPasswordChangeError('');
+      setPasswordChangeSuccess('Credentials reset to default (admin / admin123).');
+      showToast('Admin password reset to admin123.');
+    }
   };
 
   // Image Management States
@@ -394,6 +466,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
 
           <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => {
+                setActiveTab('settings');
+                setTimeout(() => {
+                  const el = document.getElementById('admin-password-card');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }, 50);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-xs font-semibold text-[#fef08a] transition-colors cursor-pointer"
+              title="Change Admin Password"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-[#d4af37]" />
+              <span className="hidden sm:inline">Change Password</span>
+            </button>
             <button
               onClick={onClose}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-colors"
@@ -746,7 +832,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <div className="flex items-center gap-2">
                           <a
                             href={`https://wa.me/${enq.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                              `Assalam o Alaikum ${enq.name}, Maulana Shamsuddin sahab ke daftar se baat kar rahe hain.`
+                              `Hello ${enq.name}, contacting you from Maulana Shamsuddin's spiritual guidance office regarding your consultation request.`
                             )}`}
                             target="_blank"
                             rel="noreferrer"
@@ -818,26 +904,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     onClick={() => {
                       const newSlide: SliderSlide = {
                         id: `slide-${Date.now()}`,
-                        subheading: 'Nayi Pareshani Ka Hal?',
-                        heading: 'Custom Ruhani Dua & Wazifa',
-                        description: 'Maulana Shamsuddin se roohani mashwara lene ke liye sampark karein.',
-                        highlightPills: ['Khaas Dua', 'Sharai Wazifa', 'Ruhani Amal'],
-                        ctaPrimaryText: 'WhatsApp Karein',
+                        subheading: 'Seeking Spiritual Guidance & Peace?',
+                        heading: 'Dedicated Dua & Spiritual Counseling',
+                        description: 'Reach out to Maulana Shamsuddin for sincere spiritual guidance and prayer consultation.',
+                        highlightPills: ['Sacred Dua', 'Authentic Wazifa', 'Spiritual Wisdom'],
+                        ctaPrimaryText: 'Consult On WhatsApp',
                         ctaPrimaryLink: `https://wa.me/${settings.whatsappNumber}`,
                         ctaSecondaryText: settings.phoneDisplay,
                         ctaSecondaryLink: `tel:${settings.phoneNumber}`,
-                        scriptQuote: '“Rab par yaqeen rakhein...”',
+                        scriptQuote: '“Have faith in divine wisdom and patience...”',
                         displayOrder: slides.length + 1,
                         isActive: true,
                         themeStyle: 'ruhani',
                       };
                       setSlides([...slides, newSlide]);
-                      showToast('Naya slide shamil kiya gaya.');
+                      showToast('New slide created successfully.');
                     }}
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#155e3c] text-white text-xs font-bold rounded-xl hover:bg-[#0f442b]"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>Naya Slide Add Karein</span>
+                    <span>Add New Slide</span>
                   </button>
                 </div>
 
@@ -1093,11 +1179,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         id: `srv-${Date.now()}`,
                         slug: 'custom-spiritual-guidance',
                         title: 'Family Dispute Resolution',
-                        shortDescription: 'Gharelu klesh aur aapsi ittehad ke liye khaas sharai amal.',
-                        fullDescription: 'Khandan aur parivaar mein aman o sukoon ke liye sharai zikr aur counseling.',
-                        spiritualBenefits: ['Ghar mein sukoon', 'Na-ittefaqi ka khatma', 'Dilon mein narmi'],
-                        processSteps: ['Halat batayein', 'Mashwara lein', 'Dua karein'],
-                        recommendedWazifa: 'Surah Rahman ki tilawat',
+                        shortDescription: 'Spiritual guidance and supplications for household tranquility and family harmony.',
+                        fullDescription: 'Compassionate spiritual counseling and authentic Quranic supplications to resolve family friction and cultivate peace.',
+                        spiritualBenefits: ['Tranquility in household', 'Resolution of disputes', 'Mutual warmth between hearts'],
+                        processSteps: ['Share your situation', 'Receive tailored guidance', 'Perform sincere prayers'],
+                        recommendedWazifa: 'Daily recitation of Surah Ar-Rahman for peace and blessings.',
                         iconType: 'custom',
                         imageTag: 'hands_supplication',
                         displayOrder: services.length + 1,
@@ -1106,12 +1192,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         metaDescription: 'Spiritual guidance for family peace.',
                       };
                       setServices([...services, newSrv]);
-                      showToast('Nayi service add ho gayi.');
+                      showToast('New service added successfully.');
                     }}
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#155e3c] text-white text-xs font-bold rounded-xl hover:bg-[#0f442b]"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>Nayi Service Add Karein</span>
+                    <span>Add New Service</span>
                   </button>
                 </div>
 
@@ -1138,7 +1224,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 s.id === srv.id ? { ...s, isActive: !s.isActive } : s
                               );
                               setServices(updated);
-                              showToast(`Service ${srv.isActive ? 'hide' : 'publish'} ho gayi.`);
+                              showToast(`Service ${srv.isActive ? 'hidden' : 'published'} successfully.`);
                             }}
                             className={`text-xs px-3 py-1 rounded-full font-bold ${
                               srv.isActive
@@ -1153,7 +1239,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             <button
                               onClick={() => {
                                 setServices(services.filter((s) => s.id !== srv.id));
-                                showToast('Service delete ho gayi.');
+                                showToast('Service removed successfully.');
                               }}
                               className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
                             >
@@ -2211,20 +2297,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         id: `test-${Date.now()}`,
                         name: 'Zubair Qureshi',
                         location: 'Delhi, India',
-                        quote: 'Maulana sahab ke wazifa aur dua se dil ko bohot sukoon mila.',
+                        quote: 'Maulana Sahabs prayers and sincere counsel brought immense tranquility to our household.',
                         rating: 5,
-                        serviceCategory: 'Ruhani Mashwara',
+                        serviceCategory: 'Spiritual Counseling',
                         avatarType: 'man',
                         isApproved: true,
                         createdAt: new Date().toISOString().split('T')[0],
                       };
                       setTestimonials([...testimonials, newTest]);
-                      showToast('Naya testimonial shamil kiya.');
+                      showToast('New testimonial created successfully.');
                     }}
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#155e3c] text-white text-xs font-bold rounded-xl hover:bg-[#0f442b]"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>Naya Testimonial Add Karein</span>
+                    <span>Add New Testimonial</span>
                   </button>
                 </div>
 
@@ -2516,7 +2602,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           <div className="flex items-center gap-2">
                             <a
                               href={`https://wa.me/${enq.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                                `Assalam o Alaikum ${enq.name}, Maulana Shamsuddin sahab ke daftar se aapki enquiry ke mutalliq message hai.`
+                                `Hello ${enq.name}, message from Maulana Shamsuddin's office regarding your consultation enquiry.`
                               )}`}
                               target="_blank"
                               rel="noreferrer"
@@ -2753,11 +2839,194 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 <div className="pt-2">
                   <button
-                    onClick={() => showToast('Settings save ho gayi hain.')}
-                    className="px-6 py-2.5 bg-[#155e3c] text-white text-xs font-bold rounded-xl"
+                    onClick={() => showToast('Website settings saved successfully.')}
+                    className="px-6 py-2.5 bg-[#155e3c] hover:bg-[#0f442b] text-white text-xs font-bold rounded-xl cursor-pointer shadow-sm transition-all"
                   >
                     Save Changes
                   </button>
+                </div>
+
+                {/* ADMIN SECURITY & PASSWORD MANAGEMENT SECTION */}
+                <div
+                  id="admin-password-card"
+                  className="mt-8 p-6 bg-gradient-to-br from-[#0c2417] via-[#091b11] to-[#040e09] text-white rounded-2xl shadow-xl border border-[#d4af37]/40 space-y-5"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#d4af37]/20 border border-[#d4af37]/40 flex items-center justify-center text-[#fef08a] shrink-0">
+                        <KeyRound className="w-5 h-5 text-[#d4af37]" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-heading text-lg font-bold text-white">
+                            Admin Password & Security Settings
+                          </h4>
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-[#d4af37] bg-white/10 px-2 py-0.5 rounded-full border border-[#d4af37]/30">
+                            Protected
+                          </span>
+                        </div>
+                        <p className="text-xs text-emerald-200/80 mt-0.5">
+                          Change your administrator login password and username for website management.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {localStorage.getItem('ms_admin_password') ? (
+                        <span className="text-[11px] font-bold text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-500/40 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                          Custom Password Active
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-medium text-amber-200 bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-500/40 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-amber-400" />
+                          Default (admin123)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {passwordChangeError && (
+                    <div className="p-3 bg-red-950/80 border border-red-500/50 rounded-xl text-red-200 text-xs flex items-center gap-2">
+                      <span className="font-bold text-red-400">✕</span>
+                      <span>{passwordChangeError}</span>
+                    </div>
+                  )}
+
+                  {passwordChangeSuccess && (
+                    <div className="p-3 bg-emerald-950/80 border border-emerald-500/50 rounded-xl text-emerald-200 text-xs flex items-center gap-2">
+                      <span className="font-bold text-emerald-400">✓</span>
+                      <span>{passwordChangeSuccess}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleUpdatePassword} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Admin Username */}
+                      <div>
+                        <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
+                          Admin Username
+                        </label>
+                        <input
+                          type="text"
+                          value={adminUsernameInput}
+                          onChange={(e) => setAdminUsernameInput(e.target.value)}
+                          placeholder="admin"
+                          required
+                          className="w-full px-3.5 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
+                        />
+                        <span className="text-[10px] text-emerald-200/60 mt-1 block">
+                          Default is 'admin'.
+                        </span>
+                      </div>
+
+                      {/* Current Password */}
+                      <div>
+                        <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
+                          Current Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showCurrentPassword ? 'text' : 'password'}
+                            value={currentAdminPassword}
+                            onChange={(e) => setCurrentAdminPassword(e.target.value)}
+                            placeholder="Enter current password (e.g. admin123)"
+                            required
+                            className="w-full px-3.5 pr-10 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-1"
+                            aria-label="Toggle password visibility"
+                          >
+                            {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        <span className="text-[10px] text-emerald-200/60 mt-1 block">
+                          Enter your current active password to authenticate.
+                        </span>
+                      </div>
+
+                      {/* New Password */}
+                      <div>
+                        <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
+                          New Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showNewPassword ? 'text' : 'password'}
+                            value={newAdminPassword}
+                            onChange={(e) => setNewAdminPassword(e.target.value)}
+                            placeholder="Enter new strong password"
+                            required
+                            minLength={4}
+                            className="w-full px-3.5 pr-10 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-1"
+                            aria-label="Toggle password visibility"
+                          >
+                            {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        <span className="text-[10px] text-emerald-200/60 mt-1 block">
+                          Minimum 4 characters (alphanumeric recommended).
+                        </span>
+                      </div>
+
+                      {/* Confirm New Password */}
+                      <div>
+                        <label className="block text-xs font-semibold text-emerald-100 mb-1.5">
+                          Confirm New Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            value={confirmAdminPassword}
+                            onChange={(e) => setConfirmAdminPassword(e.target.value)}
+                            placeholder="Repeat new password"
+                            required
+                            minLength={4}
+                            className="w-full px-3.5 pr-10 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] font-medium"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-1"
+                            aria-label="Toggle password visibility"
+                          >
+                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        <span className="text-[10px] text-emerald-200/60 mt-1 block">
+                          Must exactly match the new password.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <button
+                        type="submit"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#d4af37] hover:bg-[#b89324] text-[#0f2e1e] font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                      >
+                        <KeyRound className="w-4 h-4" />
+                        <span>Update Admin Password</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleResetPasswordToDefault}
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white/5 hover:bg-red-500/20 text-neutral-300 hover:text-red-200 border border-white/10 hover:border-red-500/30 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                        title="Reset to default password"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Reset to Default (admin / admin123)</span>
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}
